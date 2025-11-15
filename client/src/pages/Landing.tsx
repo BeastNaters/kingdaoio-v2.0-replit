@@ -31,7 +31,7 @@ export default function Landing() {
             </h2>
           </div>
           
-          <p className="text-white font-medium drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] [text-shadow:_1px_1px_3px_rgb(0_0_0_/_80%)] text-[32px] mt-[30px] mb-[30px]">Treasury Dashboard for Kong Holders</p>
+          <p className="text-white font-medium drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] [text-shadow:_1px_1px_3px_rgb(0_0_0_/_80%)] text-[32px] mt-[30px] mb-[30px]">Treasury Dashboard</p>
 
           <div className="flex flex-wrap items-center justify-center gap-4 mt-[15px] mb-[15px]">
             <WalletConnect />
@@ -39,7 +39,7 @@ export default function Landing() {
               size="lg"
               className={`inline-flex items-center justify-center gap-2 whitespace-nowrap focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2 border border-primary-border min-h-10 rounded-md px-8 py-6 text-base transition-all !border-none !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none drop-shadow-lg font-semibold ${
                 isConnected 
-                  ? 'bg-[#b81414]/10 hover:bg-[#b81414]/20 text-white' 
+                  ? 'bg-[#b81414]/90 hover:bg-[#b81414] text-white' 
                   : 'bg-transparent hover:bg-white/10 text-white/60'
               }`}
               onClick={() => setLocation('/dashboard')}
