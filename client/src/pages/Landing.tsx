@@ -27,7 +27,7 @@ export default function Landing() {
               Welcome
             </h1>
             <h2 className="text-6xl font-extrabold font-heading">
-              to <span className="text-red-600 drop-shadow-[0_4px_12px_rgba(220,38,38,0.9)] [text-shadow:_2px_2px_4px_rgb(0_0_0_/_80%)]">KingDAO</span>
+              to <span className="text-red-700 drop-shadow-[0_4px_12px_rgba(185,28,28,0.9)] [text-shadow:_2px_2px_4px_rgb(0_0_0_/_80%)]">KingDAO</span>
             </h2>
           </div>
           
@@ -36,13 +36,13 @@ export default function Landing() {
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <WalletConnect size="default" />
+            <WalletConnect size="sm" />
             <Button
               size="lg"
-              className={`font-bold px-8 py-6 text-base border-2 border-black transition-all ${
+              className={`font-bold px-8 py-6 text-base transition-all ${
                 isConnected 
-                  ? 'bg-red-600 hover:bg-red-700 text-white shadow-[0_0_20px_rgba(220,38,38,0.6)]' 
-                  : 'bg-red-600/30 hover:bg-red-600/40 text-white shadow-[0_0_20px_rgba(220,38,38,0.3)]'
+                  ? 'bg-red-700 hover:bg-red-800 text-white shadow-[0_6px_8px_rgba(0,0,0,0.5),0_3px_5px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_8px_12px_rgba(0,0,0,0.6),0_4px_6px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.2)] active:shadow-[0_2px_4px_rgba(0,0,0,0.6),inset_0_2px_4px_rgba(0,0,0,0.3)]' 
+                  : 'bg-red-700/30 hover:bg-red-700/40 text-white shadow-[0_4px_6px_rgba(0,0,0,0.4),0_2px_4px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]'
               }`}
               onClick={() => setLocation('/dashboard')}
               data-testid="button-enter-dashboard"
