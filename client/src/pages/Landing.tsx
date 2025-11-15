@@ -21,23 +21,30 @@ export default function Landing() {
       <Card className="max-w-lg w-full mx-4 bg-white/10 dark:bg-black/10 backdrop-blur-2xl border border-white/30 shadow-[0_8px_32px_0_rgba(255,255,255,0.1)]">
         <CardContent className="pt-16 pb-12 px-10 text-center space-y-8">
           <div className="space-y-2">
-            <h1 className="text-5xl font-bold font-heading bg-gradient-to-r from-white via-white to-red-200 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]">
+            <h1 className="text-6xl font-extrabold font-heading text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] [text-shadow:_2px_2px_4px_rgb(0_0_0_/_80%)]">
               Welcome
             </h1>
-            <h2 className="text-5xl font-bold font-heading">
-              to <span className="bg-gradient-to-r from-red-400 via-red-500 to-red-600 bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(255,0,0,0.6)]">KingDAO</span>
+            <h2 className="text-6xl font-extrabold font-heading">
+              to <span className="text-red-600 drop-shadow-[0_4px_12px_rgba(220,38,38,0.9)] [text-shadow:_2px_2px_4px_rgb(0_0_0_/_80%)]">KingDAO</span>
             </h2>
           </div>
           
-          <p className="text-white/80 text-base drop-shadow-lg">
+          <p className="text-white text-lg font-medium drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] [text-shadow:_1px_1px_3px_rgb(0_0_0_/_80%)]">
             Web3 dashboard for Kong NFT holders
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <WalletConnect />
             <Button
               size="lg"
-              className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-8 py-6 text-base shadow-[0_0_20px_rgba(220,38,38,0.5)] border border-white/20"
+              className="bg-white hover:bg-gray-100 text-black font-bold px-8 py-6 text-base shadow-[0_0_20px_rgba(255,255,255,0.4)] border-2 border-black"
+              onClick={() => {}}
+              data-testid="button-connect-wallet"
+            >
+              Connect Wallet
+            </Button>
+            <Button
+              size="lg"
+              className="bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-6 text-base shadow-[0_0_20px_rgba(220,38,38,0.6)] border-2 border-black"
               onClick={() => setLocation('/dashboard')}
               data-testid="button-enter-dashboard"
             >

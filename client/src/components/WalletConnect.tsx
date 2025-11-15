@@ -15,12 +15,12 @@ export function WalletConnect() {
   if (isConnected && address) {
     return (
       <div className="flex items-center gap-2">
-        <span className="hidden sm:inline text-sm text-muted-foreground font-mono">
+        <span className="hidden sm:inline text-sm text-white font-mono">
           {address.slice(0, 6)}...{address.slice(-4)}
         </span>
         <Button
-          variant="outline"
           size="icon"
+          className="bg-red-600 hover:bg-red-700 text-white border-2 border-black"
           onClick={() => disconnect()}
           data-testid="button-disconnect-wallet"
         >
@@ -32,8 +32,7 @@ export function WalletConnect() {
 
   return (
     <Button
-      variant="default"
-      className="gap-2"
+      className="gap-2 bg-red-600 hover:bg-red-700 text-white border-2 border-black font-bold"
       onClick={handleConnect}
       data-testid="button-connect-wallet"
     >
