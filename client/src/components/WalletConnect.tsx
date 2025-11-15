@@ -20,7 +20,7 @@ export function WalletConnect({ size = 'default' }: WalletConnectProps) {
     return (
       <Button
         size={size}
-        className="gap-2 bg-red-700/30 hover:bg-red-700/40 text-white font-bold text-sm backdrop-blur-sm shadow-[0_6px_12px_rgba(0,0,0,0.6),inset_0_2px_0_rgba(255,255,255,0.2),inset_0_-2px_0_rgba(0,0,0,0.2)]"
+        className="gap-2 bg-red-700/30 hover:bg-red-700/40 text-white font-bold text-sm backdrop-blur-sm drop-shadow-lg !border-none !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none"
         onClick={() => disconnect()}
         data-testid="button-disconnect-wallet"
       >
@@ -35,7 +35,7 @@ export function WalletConnect({ size = 'default' }: WalletConnectProps) {
   return (
     <Button
       size={size}
-      className="gap-2 bg-red-700 hover:bg-red-800 text-white font-bold text-sm shadow-[0_8px_15px_rgba(0,0,0,0.8),inset_0_2px_0_rgba(255,255,255,0.3),inset_0_-2px_0_rgba(0,0,0,0.3)]"
+      className="gap-2 bg-red-700 hover:bg-red-800 text-white font-bold text-sm drop-shadow-xl !border-none !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none"
       onClick={handleConnect}
       data-testid="button-connect-wallet"
     >
