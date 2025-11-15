@@ -39,11 +39,7 @@ export default function Landing() {
             <WalletConnect />
             <Button
               size="lg"
-              className={`font-bold px-8 py-6 text-base transition-all !border-none !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none ${
-                isConnected 
-                  ? 'bg-red-700 hover:bg-red-800 text-white drop-shadow-xl' 
-                  : 'bg-transparent hover:bg-white/10 text-white/60 drop-shadow-lg'
-              }`}
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2 border border-primary-border min-h-10 rounded-md px-8 py-6 text-base transition-all !border-none !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none bg-transparent hover:bg-white/10 text-white/60 drop-shadow-lg font-semibold"
               onClick={() => setLocation('/dashboard')}
               data-testid="button-enter-dashboard"
             >
