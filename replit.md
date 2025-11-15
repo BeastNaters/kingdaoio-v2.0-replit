@@ -6,6 +6,21 @@ The KingDAO Treasury Dashboard is a token-gated Web3 application designed for Ko
 
 ## Recent Changes (November 2025)
 
+### Safe Global Core API Integration (November 15, 2025)
+- **Full Safe Transaction Service integration**: Implemented complete Safe{Core} API following official documentation at https://docs.safe.global/core-api/api-overview
+- **Read-only Safe operations**: Configured SafeService with direct REST API calls to Safe Transaction Service endpoints
+- **Available endpoints**:
+  - `GET /api/safe/info/:address` - Fetch Safe account details (owners, threshold, version, modules)
+  - `GET /api/safe/balances/:safeAddress` - Get Safe balances with USD values from Safe Transaction Service
+  - `GET /api/safe/transactions/pending/:safeAddress` - List unexecuted multisig transactions
+  - `GET /api/safe/transactions/history/:safeAddress` - Get executed transaction history with confirmations
+  - `GET /api/safe/transaction/:safeTxHash` - Fetch specific transaction details
+  - `GET /api/safe/confirmations/:safeTxHash` - Get transaction signatures and confirmations
+  - `GET /api/safe/safes-by-owner/:ownerAddress` - List all Safe accounts owned by an address
+- **Multi-chain support**: Safe Transaction Service endpoints for Mainnet, Sepolia, Gnosis, Polygon, Base, Arbitrum, Optimism
+- **TypeScript types**: Comprehensive interfaces for SafeInfo, SafeBalance, SafeMultisigTransaction, SafeConfirmation from Safe API responses
+- **Landing page redesign**: Custom cover page using Kong NFT banner image with centered welcome card overlay
+
 ### Community Chat Feature
 - **Real-time messaging**: Implemented Socket.IO-based community chat with three channels (general, treasury, governance)
 - **Database-enforced rate limiting**: Window-based (30-second) rate limiting per wallet per channel using PostgreSQL unique constraints
@@ -69,7 +84,7 @@ The dashboard features a tabbed interface for organizing treasury data into cate
 
 - **Ethereum RPC:** Configurable RPC endpoint for Ethereum mainnet (e.g., Infura, Alchemy).
 - **Dune Analytics:** Used exclusively for querying blockchain analytics data, specifically NFT floor prices (e.g., KING NFT).
-- **Gnosis Safe Transaction Service API:** For fetching multi-sig wallet balances.
+- **Safe{Core} Transaction Service API:** Official Safe Global infrastructure for multi-sig wallet data, transaction tracking, and confirmations. Documentation: https://docs.safe.global/core-api/transaction-service-overview
 - **Google Sheets API:** For integrating manual treasury entries.
 - **Snapshot GraphQL API:** For fetching DAO governance proposals.
 - **Discord API:** For fetching community announcements.
