@@ -56,3 +56,4 @@ waitForPort = 5000
 
 [agent]
 integrations = ["google-sheet:1.0.0", "discord:1.0.0"]
+expertMode = true
