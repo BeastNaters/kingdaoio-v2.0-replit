@@ -60,7 +60,7 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
-          <WalletConnect />
+          <WalletConnect size="default" />
         </div>
       </div>
     </nav>

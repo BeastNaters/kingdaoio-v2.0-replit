@@ -1,4 +1,5 @@
 import { useLocation } from "wouter";
+import { useAccount } from 'wagmi';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { WalletConnect } from "@/components/WalletConnect";
@@ -6,6 +7,7 @@ import bannerImage from '@assets/king-banner3_1763240561143.png';
 
 export default function Landing() {
   const [, setLocation] = useLocation();
+  const { isConnected } = useAccount();
 
   return (
     <div 
@@ -34,17 +36,14 @@ export default function Landing() {
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4">
+            <WalletConnect size="default" />
             <Button
               size="lg"
-              className="bg-white hover:bg-gray-100 text-black font-bold px-8 py-6 text-base shadow-[0_0_20px_rgba(255,255,255,0.4)] border-2 border-black"
-              onClick={() => {}}
-              data-testid="button-connect-wallet"
-            >
-              Connect Wallet
-            </Button>
-            <Button
-              size="lg"
-              className="bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-6 text-base shadow-[0_0_20px_rgba(220,38,38,0.6)] border-2 border-black"
+              className={`font-bold px-8 py-6 text-base border-2 border-black transition-all ${
+                isConnected 
+                  ? 'bg-red-600 hover:bg-red-700 text-white shadow-[0_0_20px_rgba(220,38,38,0.6)]' 
+                  : 'bg-red-600/30 hover:bg-red-600/40 text-white shadow-[0_0_20px_rgba(220,38,38,0.3)]'
+              }`}
               onClick={() => setLocation('/dashboard')}
               data-testid="button-enter-dashboard"
             >

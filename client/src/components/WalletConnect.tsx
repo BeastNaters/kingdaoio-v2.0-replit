@@ -3,7 +3,11 @@ import { injected } from 'wagmi/connectors';
 import { Button } from "@/components/ui/button";
 import { Wallet, LogOut } from "lucide-react";
 
-export function WalletConnect() {
+interface WalletConnectProps {
+  size?: 'default' | 'sm' | 'lg' | 'icon';
+}
+
+export function WalletConnect({ size = 'default' }: WalletConnectProps) {
   const { address, isConnected } = useAccount();
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
@@ -14,30 +18,29 @@ export function WalletConnect() {
 
   if (isConnected && address) {
     return (
-      <div className="flex items-center gap-2">
-        <span className="hidden sm:inline text-sm text-white font-mono">
+      <Button
+        size={size}
+        className="gap-2 bg-red-600/30 hover:bg-red-600/40 text-white border-2 border-black font-bold px-4 py-5 text-base backdrop-blur-sm"
+        onClick={() => disconnect()}
+        data-testid="button-disconnect-wallet"
+      >
+        <span className="font-mono text-sm">
           {address.slice(0, 6)}...{address.slice(-4)}
         </span>
-        <Button
-          size="icon"
-          className="bg-red-600 hover:bg-red-700 text-white border-2 border-black"
-          onClick={() => disconnect()}
-          data-testid="button-disconnect-wallet"
-        >
-          <LogOut className="h-4 w-4" />
-        </Button>
-      </div>
+        <LogOut className="h-4 w-4" />
+      </Button>
     );
   }
 
   return (
     <Button
-      className="gap-2 bg-red-600 hover:bg-red-700 text-white border-2 border-black font-bold"
+      size={size}
+      className="gap-2 bg-red-600 hover:bg-red-700 text-white border-2 border-black font-bold px-4 py-5 text-base"
       onClick={handleConnect}
       data-testid="button-connect-wallet"
     >
       <Wallet className="h-4 w-4" />
-      <span className="hidden sm:inline">Connect Wallet</span>
+      <span>Connect Wallet</span>
     </Button>
   );
 }
