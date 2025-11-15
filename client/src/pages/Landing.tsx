@@ -41,8 +41,8 @@ export default function Landing() {
               size="lg"
               className={`font-bold px-8 py-6 text-base transition-all ${
                 isConnected 
-                  ? 'bg-red-700 hover:bg-red-800 text-white shadow-[0_6px_8px_rgba(0,0,0,0.5),0_3px_5px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_8px_12px_rgba(0,0,0,0.6),0_4px_6px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.2)] active:shadow-[0_2px_4px_rgba(0,0,0,0.6),inset_0_2px_4px_rgba(0,0,0,0.3)]' 
-                  : 'bg-red-700/30 hover:bg-red-700/40 text-white shadow-[0_4px_6px_rgba(0,0,0,0.4),0_2px_4px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]'
+                  ? 'bg-red-700 hover:bg-red-800 text-white shadow-[0_8px_15px_rgba(0,0,0,0.8),inset_0_2px_0_rgba(255,255,255,0.3),inset_0_-2px_0_rgba(0,0,0,0.3)]' 
+                  : 'bg-red-700/30 hover:bg-red-700/40 text-white shadow-[0_6px_12px_rgba(0,0,0,0.6),inset_0_2px_0_rgba(255,255,255,0.2),inset_0_-2px_0_rgba(0,0,0,0.2)]'
               }`}
               onClick={() => setLocation('/dashboard')}
               data-testid="button-enter-dashboard"

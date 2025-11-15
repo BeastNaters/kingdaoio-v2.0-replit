@@ -20,7 +20,7 @@ export function WalletConnect({ size = 'default' }: WalletConnectProps) {
     return (
       <Button
         size={size}
-        className="gap-2 bg-red-700/30 hover:bg-red-700/40 text-white font-bold text-sm backdrop-blur-sm shadow-[0_4px_6px_rgba(0,0,0,0.4),0_2px_4px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.1)]"
+        className="gap-2 bg-red-700/30 hover:bg-red-700/40 text-white font-bold text-sm backdrop-blur-sm shadow-[0_6px_12px_rgba(0,0,0,0.6),inset_0_2px_0_rgba(255,255,255,0.2),inset_0_-2px_0_rgba(0,0,0,0.2)]"
         onClick={() => disconnect()}
         data-testid="button-disconnect-wallet"
       >
@@ -35,7 +35,7 @@ export function WalletConnect({ size = 'default' }: WalletConnectProps) {
   return (
     <Button
       size={size}
-      className="gap-2 bg-red-700 hover:bg-red-800 text-white font-bold text-sm shadow-[0_6px_8px_rgba(0,0,0,0.5),0_3px_5px_rgba(0,0,0,0.4),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_8px_12px_rgba(0,0,0,0.6),0_4px_6px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.2)] active:shadow-[0_2px_4px_rgba(0,0,0,0.6),inset_0_2px_4px_rgba(0,0,0,0.3)]"
+      className="gap-2 bg-red-700 hover:bg-red-800 text-white font-bold text-sm shadow-[0_8px_15px_rgba(0,0,0,0.8),inset_0_2px_0_rgba(255,255,255,0.3),inset_0_-2px_0_rgba(0,0,0,0.3)]"
       onClick={handleConnect}
       data-testid="button-connect-wallet"
     >
