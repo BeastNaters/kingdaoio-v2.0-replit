@@ -17,24 +17,24 @@ export default function Landing() {
       }}
       data-testid="page-landing"
     >
-      <Card className="max-w-lg w-full mx-4 bg-background/40 backdrop-blur-xl border border-white/20 shadow-2xl">
+      <Card className="max-w-lg w-full mx-4 bg-white/10 dark:bg-black/10 backdrop-blur-2xl border border-white/30 shadow-[0_8px_32px_0_rgba(255,255,255,0.1)]">
         <CardContent className="pt-16 pb-12 px-10 text-center space-y-8">
           <div className="space-y-2">
-            <h1 className="text-5xl font-bold font-heading text-foreground">
+            <h1 className="text-5xl font-bold font-heading bg-gradient-to-r from-white via-white to-red-200 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(255,255,255,0.5)]">
               Welcome
             </h1>
             <h2 className="text-5xl font-bold font-heading">
-              to <span className="text-red-600 dark:text-red-500">KingDAO</span>
+              to <span className="bg-gradient-to-r from-red-400 via-red-500 to-red-600 bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(255,0,0,0.6)]">KingDAO</span>
             </h2>
           </div>
           
-          <p className="text-muted-foreground text-base">
+          <p className="text-white/80 text-base drop-shadow-lg">
             Web3 dashboard for Kong NFT holders
           </p>
 
           <Button
             size="lg"
-            className="bg-red-700 hover:bg-red-800 dark:bg-red-600 dark:hover:bg-red-700 text-white px-8 py-6 text-base"
+            className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-8 py-6 text-base shadow-[0_0_20px_rgba(220,38,38,0.5)] border border-white/20"
             onClick={() => setLocation('/dashboard')}
             data-testid="button-open-dashboard"
           >
