@@ -26,7 +26,7 @@ export default function Landing() {
             <h1 className="text-6xl font-extrabold font-heading text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] [text-shadow:_2px_2px_4px_rgb(0_0_0_/_80%)]">
               Welcome
             </h1>
-            <h2 className="text-6xl font-extrabold font-heading">
+            <h2 className="text-6xl font-extrabold font-heading text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] [text-shadow:_2px_2px_4px_rgb(0_0_0_/_80%)]">
               to <span className="text-red-700 drop-shadow-[0_4px_12px_rgba(185,28,28,0.9)] [text-shadow:_2px_2px_4px_rgb(0_0_0_/_80%)]">KingDAO</span>
             </h2>
           </div>
@@ -36,7 +36,7 @@ export default function Landing() {
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <WalletConnect size="sm" />
+            <WalletConnect />
             <Button
               size="lg"
               className={`font-bold px-8 py-6 text-base transition-all !border-none !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none ${
