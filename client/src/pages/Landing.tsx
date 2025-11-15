@@ -23,7 +23,7 @@ export default function Landing() {
       <Card className="max-w-lg w-full mx-4 bg-white/10 dark:bg-black/10 backdrop-blur-2xl border border-white/30 shadow-[0_8px_32px_0_rgba(255,255,255,0.1)]">
         <CardContent className="pt-[25px] pb-[25px] pl-[50px] pr-[50px] ml-[10px] mr-[10px] text-center space-y-8">
           <div className="space-y-2">
-            <h1 className="text-6xl font-extrabold font-heading text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] [text-shadow:_2px_2px_4px_rgb(0_0_0_/_80%)]">
+            <h1 className="text-6xl font-heading text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] [text-shadow:_2px_2px_4px_rgb(0_0_0_/_80%)] font-semibold">
               Welcome
             </h1>
             <h2 className="text-6xl font-extrabold font-heading text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] [text-shadow:_2px_2px_4px_rgb(0_0_0_/_80%)]">
