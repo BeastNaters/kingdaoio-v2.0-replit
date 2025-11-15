@@ -19,7 +19,7 @@ export function WalletConnect({ size = 'default' }: WalletConnectProps) {
   if (isConnected && address) {
     return (
       <Button
-        className="gap-2 bg-red-700/30 hover:bg-red-700/40 text-white font-bold text-sm backdrop-blur-sm drop-shadow-lg !border-none !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none h-10 px-5"
+        className="gap-2 bg-transparent hover:bg-white/10 text-white/80 font-bold text-sm backdrop-blur-sm drop-shadow-lg !border-none !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none h-10 px-5"
         onClick={() => disconnect()}
         data-testid="button-disconnect-wallet"
       >

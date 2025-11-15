@@ -20,7 +20,7 @@ export default function Landing() {
       }}
       data-testid="page-landing"
     >
-      <Card className="max-w-lg w-full mx-4 bg-white/10 dark:bg-black/10 backdrop-blur-2xl border border-white/30 shadow-[0_8px_32px_0_rgba(255,255,255,0.1)]">
+      <Card className="max-w-lg w-full mx-4 bg-[#ffffff00] dark:bg-black/10 backdrop-blur-2xl border border-white/30 shadow-[0_8px_32px_0_rgba(255,255,255,0.1)] text-[#f1f5f9]">
         <CardContent className="pt-[25px] pb-[25px] pl-[50px] pr-[50px] ml-[10px] mr-[10px] text-center space-y-8">
           <div className="space-y-2">
             <h1 className="text-6xl font-heading text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] [text-shadow:_2px_2px_4px_rgb(0_0_0_/_80%)] font-semibold">
@@ -37,7 +37,11 @@ export default function Landing() {
             <WalletConnect />
             <Button
               size="lg"
-              className="hover-elevate active-elevate-2 inline-flex items-center justify-center gap-2 whitespace-nowrap focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover-elevate active-elevate-2 border border-primary-border min-h-10 rounded-md px-8 py-6 text-base transition-all !border-none !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none drop-shadow-lg font-semibold hover:bg-[#b81414] text-white bg-[#a81e1e] pt-[25px] pb-[25px] pl-[35px] pr-[35px]"
+              className={`hover-elevate active-elevate-2 inline-flex items-center justify-center gap-2 whitespace-nowrap focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-primary-border min-h-10 rounded-md pt-[25px] pb-[25px] pl-[35px] pr-[35px] text-base transition-all !border-none !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none drop-shadow-lg font-semibold ${
+                isConnected 
+                  ? 'bg-[#a81e1e] hover:bg-[#b81414] text-white' 
+                  : 'bg-transparent hover:bg-white/10 text-white/60'
+              }`}
               onClick={() => setLocation('/dashboard')}
               data-testid="button-enter-dashboard"
             >
