@@ -13,7 +13,8 @@ import { requireAdmin } from "./middleware/adminAuth";
 import { generateCsvData, generatePdfReport } from "./lib/exportUtils";
 import { sanitizeError, createErrorResponse } from "./lib/errorHandler";
 import { verifyMessage } from "viem";
-import { insertCommunityMessageSchema, insertCommunityMemberSchema } from "@shared/schema";
+import { insertCommunityMessageSchema, insertCommunityMemberSchema, insertSafeTransactionSchema, insertSafeConfirmationSchema } from "@shared/schema";
+import { SafeService } from "./lib/safeService";
 
 const ADMIN_ADDRESSES = (process.env.ADMIN_ADDRESSES || '').toLowerCase().split(',').filter(Boolean);
 
@@ -620,6 +621,263 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       return res.status(500).json(
         createErrorResponse(error, 'Failed to save member information')
+      );
+    }
+  });
+
+  app.get("/api/safe/accounts", async (req, res) => {
+    try {
+      const accounts = await storage.getAllSafeAccounts();
+      return res.json({
+        success: true,
+        data: accounts,
+      });
+    } catch (error: any) {
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to fetch Safe accounts')
+      );
+    }
+  });
+
+  app.get("/api/safe/info/:address", async (req, res) => {
+    try {
+      const { address } = req.params;
+      const { chainId } = req.query;
+      const privateKey = process.env.SAFE_OWNER_KEY;
+
+      if (!privateKey) {
+        return res.status(500).json({
+          success: false,
+          message: 'SAFE_OWNER_KEY not configured',
+        });
+      }
+
+      const safeService = new SafeService(chainId ? parseInt(chainId as string) : 1);
+      const safeInfo = await safeService.getSafeInfo(address, privateKey);
+
+      await storage.createOrUpdateSafeAccount({
+        safeAddress: safeInfo.address,
+        chainId: safeInfo.chainId,
+        threshold: safeInfo.threshold,
+        owners: safeInfo.owners,
+        version: safeInfo.version,
+      });
+
+      return res.json({
+        success: true,
+        data: safeInfo,
+      });
+    } catch (error: any) {
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to fetch Safe info')
+      );
+    }
+  });
+
+  app.post("/api/safe/propose-transaction", requireAdmin, async (req, res) => {
+    try {
+      const privateKey = process.env.SAFE_OWNER_KEY;
+      if (!privateKey) {
+        return res.status(500).json({
+          success: false,
+          message: 'SAFE_OWNER_KEY not configured',
+        });
+      }
+
+      const { safeAddress, to, value, data, operation, chainId, description, createdBy } = req.body;
+
+      const safeService = new SafeService(chainId || 1);
+      const result = await safeService.proposeTransaction({
+        safeAddress,
+        to,
+        value: value || '0',
+        data,
+        operation: operation || 0,
+        chainId: chainId || 1,
+        description,
+        privateKey,
+      });
+
+      const safeInfo = await safeService.getSafeInfo(safeAddress, privateKey);
+
+      const txData = insertSafeTransactionSchema.parse({
+        safeAddress,
+        safeTxHash: result.safeTxHash,
+        to,
+        value: value || '0',
+        data: data || '0x',
+        operation: operation || 0,
+        nonce: result.transaction.nonce,
+        safeTxGas: result.transaction.safeTxGas || '0',
+        baseGas: result.transaction.baseGas || '0',
+        gasPrice: result.transaction.gasPrice || '0',
+        gasToken: result.transaction.gasToken,
+        refundReceiver: result.transaction.refundReceiver,
+        description,
+        chainId: chainId || 1,
+        status: 'pending',
+        confirmationsRequired: safeInfo.threshold,
+        createdBy,
+      });
+
+      const transaction = await storage.createSafeTransaction(txData);
+
+      return res.json({
+        success: true,
+        data: {
+          transaction,
+          safeTxHash: result.safeTxHash,
+        },
+      });
+    } catch (error: any) {
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to propose transaction')
+      );
+    }
+  });
+
+  app.post("/api/safe/sign-transaction", requireAdmin, async (req, res) => {
+    try {
+      const privateKey = process.env.SAFE_OWNER_KEY;
+      if (!privateKey) {
+        return res.status(500).json({
+          success: false,
+          message: 'SAFE_OWNER_KEY not configured',
+        });
+      }
+
+      const { safeAddress, safeTxHash, chainId } = req.body;
+
+      const transaction = await storage.getSafeTransaction(safeTxHash);
+      if (!transaction) {
+        return res.status(404).json({
+          success: false,
+          message: 'Transaction not found',
+        });
+      }
+
+      const safeService = new SafeService(chainId || 1);
+      const result = await safeService.signTransaction({
+        safeAddress,
+        safeTxHash,
+        chainId: chainId || 1,
+        privateKey,
+      });
+
+      const confirmationData = insertSafeConfirmationSchema.parse({
+        safeTxHash,
+        owner: result.signer,
+        signature: result.signature,
+        signatureType: 'eth_sign',
+      });
+
+      await storage.createSafeConfirmation(confirmationData);
+
+      const confirmations = await storage.getSafeConfirmations(safeTxHash);
+      await storage.updateSafeTransaction(safeTxHash, {
+        confirmationsCount: confirmations.length,
+      });
+
+      return res.json({
+        success: true,
+        data: {
+          signature: result.signature,
+          signer: result.signer,
+          confirmationsCount: confirmations.length,
+        },
+      });
+    } catch (error: any) {
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to sign transaction')
+      );
+    }
+  });
+
+  app.post("/api/safe/execute-transaction", requireAdmin, async (req, res) => {
+    try {
+      const privateKey = process.env.SAFE_OWNER_KEY;
+      if (!privateKey) {
+        return res.status(500).json({
+          success: false,
+          message: 'SAFE_OWNER_KEY not configured',
+        });
+      }
+
+      const { safeAddress, safeTxHash, chainId } = req.body;
+
+      const transaction = await storage.getSafeTransaction(safeTxHash);
+      if (!transaction) {
+        return res.status(404).json({
+          success: false,
+          message: 'Transaction not found',
+        });
+      }
+
+      const safeService = new SafeService(chainId || 1);
+      const result = await safeService.executeTransaction({
+        safeAddress,
+        safeTxHash,
+        chainId: chainId || 1,
+        privateKey,
+      });
+
+      await storage.updateSafeTransaction(safeTxHash, {
+        status: 'executed',
+        transactionHash: result.transactionHash,
+        executedAt: new Date(),
+      });
+
+      return res.json({
+        success: true,
+        data: {
+          transactionHash: result.transactionHash,
+        },
+      });
+    } catch (error: any) {
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to execute transaction')
+      );
+    }
+  });
+
+  app.get("/api/safe/transactions/:safeAddress", async (req, res) => {
+    try {
+      const { safeAddress } = req.params;
+      const { pending } = req.query;
+
+      const transactions = pending === 'true' 
+        ? await storage.getPendingSafeTransactions(safeAddress)
+        : await storage.getAllSafeTransactions(safeAddress);
+
+      return res.json({
+        success: true,
+        data: transactions,
+      });
+    } catch (error: any) {
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to fetch transactions')
+      );
+    }
+  });
+
+  app.get("/api/safe/balances/:safeAddress", async (req, res) => {
+    try {
+      const { safeAddress } = req.params;
+      const { chainId } = req.query;
+
+      const safeService = new SafeService(chainId ? parseInt(chainId as string) : 1);
+      const balances = await safeService.getSafeBalances(
+        safeAddress,
+        chainId ? parseInt(chainId as string) : 1
+      );
+
+      return res.json({
+        success: true,
+        data: balances,
+      });
+    } catch (error: any) {
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to fetch Safe balances')
       );
     }
   });

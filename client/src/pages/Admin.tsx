@@ -7,10 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient } from '@/lib/queryClient';
 import { getAdminAuthHeaders } from '@/lib/adminAuth';
-import { Settings, Wallet, MessageSquare, Trash2, Plus } from 'lucide-react';
+import { Settings, Wallet, MessageSquare, Trash2, Plus, Shield } from 'lucide-react';
+import { SafeManager } from '@/components/SafeManager';
+import { TransactionProposal } from '@/components/TransactionProposal';
+import { PendingTransactions } from '@/components/PendingTransactions';
 
 interface AdminSetting {
   id: string;
@@ -291,6 +295,49 @@ export default function Admin() {
               )}
             </div>
           </div>
+        </Card>
+
+        <Card className="rounded-2xl border border-white/10 bg-card/50 backdrop-blur-xl p-6">
+          <div className="flex items-start gap-4 mb-6">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10">
+              <Shield className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-xl font-semibold font-heading mb-1">Safe Wallet Management</h2>
+              <p className="text-sm text-muted-foreground">Manage multi-signature Safe wallets and transactions</p>
+            </div>
+          </div>
+
+          <Tabs defaultValue="accounts" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="accounts" data-testid="tab-safe-accounts">Safe Accounts</TabsTrigger>
+              <TabsTrigger value="propose" data-testid="tab-propose-transaction">Propose Transaction</TabsTrigger>
+              <TabsTrigger value="pending" data-testid="tab-pending-transactions">Pending Transactions</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="accounts" className="mt-6">
+              <SafeManager />
+            </TabsContent>
+
+            <TabsContent value="propose" className="mt-6">
+              <TransactionProposal />
+            </TabsContent>
+
+            <TabsContent value="pending" className="mt-6">
+              {import.meta.env.VITE_SAFE_ADDRESS ? (
+                <PendingTransactions 
+                  safeAddress={import.meta.env.VITE_SAFE_ADDRESS} 
+                  chainId={1} 
+                />
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">
+                    Configure VITE_SAFE_ADDRESS environment variable to view pending transactions
+                  </p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </Card>
       </div>
     </div>

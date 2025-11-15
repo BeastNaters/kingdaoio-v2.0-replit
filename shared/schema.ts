@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, jsonb, real, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, jsonb, real, unique, integer, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -126,3 +126,101 @@ export const insertCommunityMemberSchema = createInsertSchema(communityMembers).
 
 export type InsertCommunityMember = z.infer<typeof insertCommunityMemberSchema>;
 export type CommunityMember = typeof communityMembers.$inferSelect;
+
+export const safeAccounts = pgTable("safe_accounts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  safeAddress: text("safe_address").notNull().unique(),
+  chainId: integer("chain_id").notNull(),
+  threshold: integer("threshold").notNull(),
+  owners: text("owners").array().notNull(),
+  version: text("version"),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
+export const safeTransactions = pgTable("safe_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  safeAddress: text("safe_address").notNull(),
+  safeTxHash: text("safe_tx_hash").notNull().unique(),
+  to: text("to").notNull(),
+  value: text("value").notNull(),
+  data: text("data"),
+  operation: integer("operation").notNull().default(0),
+  nonce: integer("nonce").notNull(),
+  safeTxGas: text("safe_tx_gas").notNull(),
+  baseGas: text("base_gas").notNull(),
+  gasPrice: text("gas_price").notNull(),
+  gasToken: text("gas_token"),
+  refundReceiver: text("refund_receiver"),
+  description: text("description"),
+  chainId: integer("chain_id").notNull(),
+  status: text("status").notNull().default('pending'),
+  confirmationsRequired: integer("confirmations_required").notNull(),
+  confirmationsCount: integer("confirmations_count").notNull().default(0),
+  transactionHash: text("transaction_hash"),
+  executedAt: timestamp("executed_at"),
+  createdBy: text("created_by").notNull(),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
+export const safeConfirmations = pgTable("safe_confirmations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  safeTxHash: text("safe_tx_hash").notNull(),
+  owner: text("owner").notNull(),
+  signature: text("signature").notNull(),
+  signatureType: text("signature_type"),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+}, (table) => ({
+  txOwnerUnique: unique("tx_owner_unique").on(table.safeTxHash, table.owner),
+}));
+
+export const insertSafeAccountSchema = createInsertSchema(safeAccounts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  safeAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/, "Invalid Safe address"),
+  chainId: z.number().int().positive(),
+  threshold: z.number().int().positive(),
+  owners: z.array(z.string().regex(/^0x[a-fA-F0-9]{40}$/)).min(1),
+});
+
+export const insertSafeTransactionSchema = createInsertSchema(safeTransactions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  confirmationsCount: true,
+  executedAt: true,
+  transactionHash: true,
+}).extend({
+  safeAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/, "Invalid Safe address"),
+  to: z.string().regex(/^0x[a-fA-F0-9]{40}$/, "Invalid recipient address"),
+  value: z.string(),
+  chainId: z.number().int().positive(),
+  nonce: z.number().int().min(0),
+  status: z.enum(['pending', 'executed', 'failed', 'cancelled']).default('pending'),
+  createdBy: z.string().regex(/^0x[a-fA-F0-9]{40}$/, "Invalid creator address"),
+});
+
+export const insertSafeConfirmationSchema = createInsertSchema(safeConfirmations).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  safeTxHash: z.string().min(1),
+  owner: z.string().regex(/^0x[a-fA-F0-9]{40}$/, "Invalid owner address"),
+  signature: z.string().min(1),
+});
+
+export type InsertSafeAccount = z.infer<typeof insertSafeAccountSchema>;
+export type SafeAccount = typeof safeAccounts.$inferSelect;
+
+export type InsertSafeTransaction = z.infer<typeof insertSafeTransactionSchema>;
+export type SafeTransaction = typeof safeTransactions.$inferSelect;
+
+export type InsertSafeConfirmation = z.infer<typeof insertSafeConfirmationSchema>;
+export type SafeConfirmation = typeof safeConfirmations.$inferSelect;
+
+export interface SafeTransactionWithConfirmations extends SafeTransaction {
+  confirmations: SafeConfirmation[];
+}

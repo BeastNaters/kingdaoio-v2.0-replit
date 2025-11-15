@@ -1,88 +1,47 @@
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, Shield, Users } from "lucide-react";
-import { WalletConnect } from "@/components/WalletConnect";
+import { Card, CardContent } from "@/components/ui/card";
+import bannerImage from '@assets/king-banner3_1763240561143.png';
 
 export default function Landing() {
+  const [, setLocation] = useLocation();
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <section className="min-h-screen flex items-center justify-center relative overflow-hidden">
-          <div className="absolute inset-0">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-          </div>
-
-          <div className="relative z-10 text-center max-w-4xl mx-auto py-20">
-            <div className="mb-8 inline-block">
-              <div className="flex h-20 w-20 mx-auto items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent p-1">
-                <div className="h-full w-full rounded-xl bg-background flex items-center justify-center">
-                  <span className="text-4xl font-bold font-heading bg-gradient-to-br from-primary to-accent bg-clip-text text-transparent">
-                    K
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold font-heading mb-6 bg-gradient-to-r from-primary via-purple-400 to-accent bg-clip-text text-transparent leading-tight" data-testid="text-hero-title">
-              KingDAO Treasury Dashboard
+    <div 
+      className="min-h-screen w-full flex items-center justify-center relative overflow-hidden"
+      style={{
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${bannerImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+      data-testid="page-landing"
+    >
+      <Card className="max-w-lg w-full mx-4 bg-background/95 backdrop-blur-md border-2 shadow-2xl">
+        <CardContent className="pt-16 pb-12 px-10 text-center space-y-6">
+          <div className="space-y-4">
+            <h1 className="text-5xl font-bold font-heading">
+              Welcome
             </h1>
-
-            <p className="text-lg sm:text-xl text-slate-300 mb-12 max-w-2xl mx-auto leading-relaxed">
-              Real-time, token-gated treasury visibility for Kong NFT holders. Track DAO assets, multi-sig wallets, and community governance.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <WalletConnect />
-
-              <Link href="/dashboard">
-                <div>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="text-lg px-8 py-6 backdrop-blur-sm"
-                    data-testid="button-enter-dashboard"
-                  >
-                    Enter Dashboard
-                  </Button>
-                </div>
-              </Link>
-            </div>
-
-            <div className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="rounded-2xl border border-white/10 bg-card/30 backdrop-blur-xl p-6 hover-elevate">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 mb-4">
-                  <TrendingUp className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-semibold font-heading mb-2">Multi-Source Aggregation</h3>
-                <p className="text-muted-foreground text-sm">
-                  Real-time data from Gnosis Safe, Dune Analytics, and on-chain sources
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-card/30 backdrop-blur-xl p-6 hover-elevate">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-accent/10 mb-4">
-                  <Shield className="h-6 w-6 text-accent" />
-                </div>
-                <h3 className="text-lg font-semibold font-heading mb-2">Token-Gated Access</h3>
-                <p className="text-muted-foreground text-sm">
-                  Exclusive access for Kong NFT holders verified on Ethereum mainnet
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-card/30 backdrop-blur-xl p-6 hover-elevate">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-chart-3/10 mb-4">
-                  <Users className="h-6 w-6 text-chart-3" />
-                </div>
-                <h3 className="text-lg font-semibold font-heading mb-2">Community Governance</h3>
-                <p className="text-muted-foreground text-sm">
-                  Track Snapshot proposals and Discord announcements in one place
-                </p>
-              </div>
-            </div>
+            <h2 className="text-4xl font-bold font-heading text-primary">
+              to KingDAO
+            </h2>
           </div>
-        </section>
-      </div>
+          
+          <p className="text-muted-foreground">
+            Web3 dashboard for Kong NFT holders
+          </p>
+
+          <Button
+            size="lg"
+            className="w-full mt-8 text-lg py-6"
+            onClick={() => setLocation('/dashboard')}
+            data-testid="button-open-dashboard"
+          >
+            Open Dashboard
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

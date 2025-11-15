@@ -6,10 +6,17 @@ import {
   type CommunityMessage,
   type InsertCommunityMessage,
   type CommunityMember,
-  type InsertCommunityMember
+  type InsertCommunityMember,
+  type SafeAccount,
+  type InsertSafeAccount,
+  type SafeTransaction,
+  type InsertSafeTransaction,
+  type SafeConfirmation,
+  type InsertSafeConfirmation,
+  type SafeTransactionWithConfirmations
 } from "@shared/schema";
 import { db } from "./db";
-import { adminSettings, nftAssets, communityMessages, communityMembers } from "@shared/schema";
+import { adminSettings, nftAssets, communityMessages, communityMembers, safeAccounts, safeTransactions, safeConfirmations } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 
 export interface IStorage {
@@ -28,6 +35,21 @@ export interface IStorage {
 
   getCommunityMember(walletAddress: string): Promise<CommunityMember | undefined>;
   createOrUpdateCommunityMember(member: InsertCommunityMember): Promise<CommunityMember>;
+
+  getSafeAccount(safeAddress: string): Promise<SafeAccount | undefined>;
+  createOrUpdateSafeAccount(account: InsertSafeAccount): Promise<SafeAccount>;
+  getAllSafeAccounts(): Promise<SafeAccount[]>;
+
+  getSafeTransaction(safeTxHash: string): Promise<SafeTransaction | undefined>;
+  getSafeTransactionWithConfirmations(safeTxHash: string): Promise<SafeTransactionWithConfirmations | undefined>;
+  createSafeTransaction(transaction: InsertSafeTransaction): Promise<SafeTransaction>;
+  updateSafeTransaction(safeTxHash: string, updates: Partial<SafeTransaction>): Promise<SafeTransaction>;
+  getPendingSafeTransactions(safeAddress: string): Promise<SafeTransactionWithConfirmations[]>;
+  getAllSafeTransactions(safeAddress: string): Promise<SafeTransactionWithConfirmations[]>;
+
+  getSafeConfirmation(safeTxHash: string, owner: string): Promise<SafeConfirmation | undefined>;
+  createSafeConfirmation(confirmation: InsertSafeConfirmation): Promise<SafeConfirmation>;
+  getSafeConfirmations(safeTxHash: string): Promise<SafeConfirmation[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -164,6 +186,146 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return member;
+  }
+
+  async getSafeAccount(safeAddress: string): Promise<SafeAccount | undefined> {
+    const [account] = await db
+      .select()
+      .from(safeAccounts)
+      .where(eq(safeAccounts.safeAddress, safeAddress));
+    return account || undefined;
+  }
+
+  async createOrUpdateSafeAccount(insertAccount: InsertSafeAccount): Promise<SafeAccount> {
+    const [account] = await db
+      .insert(safeAccounts)
+      .values(insertAccount)
+      .onConflictDoUpdate({
+        target: safeAccounts.safeAddress,
+        set: {
+          chainId: insertAccount.chainId,
+          threshold: insertAccount.threshold,
+          owners: insertAccount.owners,
+          version: insertAccount.version,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return account;
+  }
+
+  async getAllSafeAccounts(): Promise<SafeAccount[]> {
+    return await db.select().from(safeAccounts);
+  }
+
+  async getSafeTransaction(safeTxHash: string): Promise<SafeTransaction | undefined> {
+    const [transaction] = await db
+      .select()
+      .from(safeTransactions)
+      .where(eq(safeTransactions.safeTxHash, safeTxHash));
+    return transaction || undefined;
+  }
+
+  async getSafeTransactionWithConfirmations(safeTxHash: string): Promise<SafeTransactionWithConfirmations | undefined> {
+    const transaction = await this.getSafeTransaction(safeTxHash);
+    if (!transaction) return undefined;
+
+    const confirmations = await this.getSafeConfirmations(safeTxHash);
+    
+    return {
+      ...transaction,
+      confirmations,
+    };
+  }
+
+  async createSafeTransaction(insertTransaction: InsertSafeTransaction): Promise<SafeTransaction> {
+    const [transaction] = await db
+      .insert(safeTransactions)
+      .values(insertTransaction)
+      .returning();
+    return transaction;
+  }
+
+  async updateSafeTransaction(safeTxHash: string, updates: Partial<SafeTransaction>): Promise<SafeTransaction> {
+    const [transaction] = await db
+      .update(safeTransactions)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(safeTransactions.safeTxHash, safeTxHash))
+      .returning();
+    return transaction;
+  }
+
+  async getPendingSafeTransactions(safeAddress: string): Promise<SafeTransactionWithConfirmations[]> {
+    const transactions = await db
+      .select()
+      .from(safeTransactions)
+      .where(and(
+        eq(safeTransactions.safeAddress, safeAddress),
+        eq(safeTransactions.status, 'pending')
+      ))
+      .orderBy(desc(safeTransactions.createdAt));
+
+    const txsWithConfirmations = await Promise.all(
+      transactions.map(async (tx) => {
+        const confirmations = await this.getSafeConfirmations(tx.safeTxHash);
+        return {
+          ...tx,
+          confirmations,
+        };
+      })
+    );
+
+    return txsWithConfirmations;
+  }
+
+  async getAllSafeTransactions(safeAddress: string): Promise<SafeTransactionWithConfirmations[]> {
+    const transactions = await db
+      .select()
+      .from(safeTransactions)
+      .where(eq(safeTransactions.safeAddress, safeAddress))
+      .orderBy(desc(safeTransactions.createdAt));
+
+    const txsWithConfirmations = await Promise.all(
+      transactions.map(async (tx) => {
+        const confirmations = await this.getSafeConfirmations(tx.safeTxHash);
+        return {
+          ...tx,
+          confirmations,
+        };
+      })
+    );
+
+    return txsWithConfirmations;
+  }
+
+  async getSafeConfirmation(safeTxHash: string, owner: string): Promise<SafeConfirmation | undefined> {
+    const [confirmation] = await db
+      .select()
+      .from(safeConfirmations)
+      .where(and(
+        eq(safeConfirmations.safeTxHash, safeTxHash),
+        eq(safeConfirmations.owner, owner)
+      ));
+    return confirmation || undefined;
+  }
+
+  async createSafeConfirmation(insertConfirmation: InsertSafeConfirmation): Promise<SafeConfirmation> {
+    const [confirmation] = await db
+      .insert(safeConfirmations)
+      .values(insertConfirmation)
+      .returning();
+    return confirmation;
+  }
+
+  async getSafeConfirmations(safeTxHash: string): Promise<SafeConfirmation[]> {
+    return await db
+      .select()
+      .from(safeConfirmations)
+      .where(eq(safeConfirmations.safeTxHash, safeTxHash))
+      .orderBy(desc(safeConfirmations.createdAt));
   }
 }
 
