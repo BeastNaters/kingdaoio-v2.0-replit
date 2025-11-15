@@ -31,7 +31,7 @@ export default function Landing() {
             </h2>
           </div>
           
-          <p className="text-white text-lg font-medium drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] [text-shadow:_1px_1px_3px_rgb(0_0_0_/_80%)]">Treasury Dashboard for Kong Holders</p>
+          <p className="text-white font-medium drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)] [text-shadow:_1px_1px_3px_rgb(0_0_0_/_80%)] text-[32px] mt-[30px] mb-[30px]">Treasury Dashboard</p>
 
           <div className="flex flex-wrap items-center justify-center gap-4">
             <WalletConnect />
