@@ -19,7 +19,7 @@ export function Navbar() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2" data-testid="link-home">
-            <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg">
+            <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-lg">
               <img src={emblemImage} alt="King DAO" className="h-full w-full object-contain" />
             </div>
             <span className="text-xl font-extrabold font-heading hidden sm:inline text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] [text-shadow:_2px_2px_4px_rgb(0_0_0_/_80%)]">KingDAO</span>
