@@ -37,10 +37,10 @@ export default function Landing() {
             <WalletConnect />
             <Button
               size="lg"
-              className={`hover-elevate active-elevate-2 inline-flex items-center justify-center gap-2 whitespace-nowrap focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-primary-border min-h-10 rounded-md pt-[25px] pb-[25px] pl-[35px] pr-[35px] text-base transition-all !border-none !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none drop-shadow-lg font-semibold ${
+              className={`hover-elevate active-elevate-2 inline-flex items-center justify-center gap-2 whitespace-nowrap focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-primary-border min-h-10 rounded-md pt-[25px] pb-[25px] pl-[35px] pr-[35px] text-base transition-all !border-none !ring-0 !outline-none focus:!ring-0 focus:!outline-none focus-visible:!ring-0 focus-visible:!outline-none font-semibold ${
                 isConnected 
-                  ? 'bg-[#a81e1e] hover:bg-[#b81414] text-white' 
-                  : 'bg-transparent hover:bg-white/10 text-white/60'
+                  ? 'bg-[#a81e1e] hover:bg-[#b81414] text-white shadow-[0_6px_0_rgba(0,0,0,0.8),0_-1px_0_rgba(255,255,255,0.15)_inset,0_8px_16px_rgba(0,0,0,0.4)] hover:shadow-[0_4px_0_rgba(0,0,0,0.8),0_-1px_0_rgba(255,255,255,0.15)_inset,0_6px_12px_rgba(0,0,0,0.4)] hover:translate-y-[2px]' 
+                  : 'bg-transparent hover:bg-white/10 text-white/60 drop-shadow-lg'
               }`}
               onClick={() => setLocation('/dashboard')}
               data-testid="button-enter-dashboard"
