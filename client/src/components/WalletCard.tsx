@@ -48,7 +48,7 @@ export function WalletCard({
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-3">
         <CardTitle className="text-base font-medium">{label}</CardTitle>
         {chain === 'SOL' && (
-          <span className="inline-flex items-center rounded-md bg-purple-500/10 px-2 py-1 text-xs font-medium text-purple-400 ring-1 ring-inset ring-purple-500/20">
+          <span className="inline-flex items-center rounded-md bg-red-500/10 px-2 py-1 text-xs font-medium text-red-400 ring-1 ring-inset ring-red-500/20">
             Solana
           </span>
         )}
