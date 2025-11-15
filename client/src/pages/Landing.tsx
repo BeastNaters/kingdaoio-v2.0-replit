@@ -9,7 +9,7 @@ export default function Landing() {
 
   return (
     <div 
-      className="min-h-screen w-full flex items-center justify-center relative overflow-hidden"
+      className="fixed inset-0 w-full h-screen flex items-center justify-center overflow-hidden"
       style={{
         backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${bannerImage})`,
         backgroundSize: 'cover',

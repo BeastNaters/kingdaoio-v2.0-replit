@@ -15,7 +15,7 @@ export function Navbar() {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-md">
+    <nav className="sticky top-0 z-50 w-full border-b border-white/10 bg-white/5 dark:bg-black/5 backdrop-blur-xl">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2" data-testid="link-home">
