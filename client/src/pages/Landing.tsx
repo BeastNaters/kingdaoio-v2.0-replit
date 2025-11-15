@@ -17,7 +17,7 @@ export default function Landing() {
       }}
       data-testid="page-landing"
     >
-      <Card className="max-w-lg w-full mx-4 bg-background/70 backdrop-blur-md border-2 shadow-2xl">
+      <Card className="max-w-lg w-full mx-4 bg-background/40 backdrop-blur-xl border border-white/20 shadow-2xl">
         <CardContent className="pt-16 pb-12 px-10 text-center space-y-8">
           <div className="space-y-2">
             <h1 className="text-5xl font-bold font-heading text-foreground">
