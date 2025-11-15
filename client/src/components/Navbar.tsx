@@ -22,7 +22,7 @@ export function Navbar() {
             <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg">
               <img src={emblemImage} alt="King DAO" className="h-full w-full object-contain" />
             </div>
-            <span className="text-xl font-bold font-heading hidden sm:inline text-white drop-shadow-[0_0_1px_rgba(0,0,0,0.7)] [text-shadow:_1px_1px_0_rgba(0,0,0,0.7),_-1px_1px_0_rgba(0,0,0,0.7),_1px_-1px_0_rgba(0,0,0,0.7),_-1px_-1px_0_rgba(0,0,0,0.7)]">KingDAO</span>
+            <span className="text-xl font-extrabold font-heading hidden sm:inline text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] [text-shadow:_2px_2px_4px_rgb(0_0_0_/_80%)]">KingDAO</span>
           </Link>
 
           {location !== "/" && (
