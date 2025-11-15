@@ -17,24 +17,24 @@ export default function Landing() {
       }}
       data-testid="page-landing"
     >
-      <Card className="max-w-lg w-full mx-4 bg-background/95 backdrop-blur-md border-2 shadow-2xl">
-        <CardContent className="pt-16 pb-12 px-10 text-center space-y-6">
-          <div className="space-y-4">
-            <h1 className="text-5xl font-bold font-heading">
+      <Card className="max-w-lg w-full mx-4 bg-background/70 backdrop-blur-md border-2 shadow-2xl">
+        <CardContent className="pt-16 pb-12 px-10 text-center space-y-8">
+          <div className="space-y-2">
+            <h1 className="text-5xl font-bold font-heading text-foreground">
               Welcome
             </h1>
-            <h2 className="text-4xl font-bold font-heading text-primary">
-              to KingDAO
+            <h2 className="text-5xl font-bold font-heading">
+              to <span className="text-red-600 dark:text-red-500">KingDAO</span>
             </h2>
           </div>
           
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-base">
             Web3 dashboard for Kong NFT holders
           </p>
 
           <Button
             size="lg"
-            className="w-full mt-8 text-lg py-6"
+            className="bg-red-700 hover:bg-red-800 dark:bg-red-600 dark:hover:bg-red-700 text-white px-8 py-6 text-base"
             onClick={() => setLocation('/dashboard')}
             data-testid="button-open-dashboard"
           >

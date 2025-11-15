@@ -8,7 +8,7 @@ The KingDAO Treasury Dashboard is a token-gated Web3 application designed for Ko
 
 ### Safe Global Core API Integration (November 15, 2025)
 - **Full Safe Transaction Service integration**: Implemented complete Safe{Core} API following official documentation at https://docs.safe.global/core-api/api-overview
-- **Read-only Safe operations**: Configured SafeService with direct REST API calls to Safe Transaction Service endpoints
+- **Read-only Safe operations**: Configured SafeService with direct REST API calls to Safe Transaction Service endpoints for viewing wallet holdings and transaction history
 - **Available endpoints**:
   - `GET /api/safe/info/:address` - Fetch Safe account details (owners, threshold, version, modules)
   - `GET /api/safe/balances/:safeAddress` - Get Safe balances with USD values from Safe Transaction Service
@@ -17,9 +17,13 @@ The KingDAO Treasury Dashboard is a token-gated Web3 application designed for Ko
   - `GET /api/safe/transaction/:safeTxHash` - Fetch specific transaction details
   - `GET /api/safe/confirmations/:safeTxHash` - Get transaction signatures and confirmations
   - `GET /api/safe/safes-by-owner/:ownerAddress` - List all Safe accounts owned by an address
-- **Multi-chain support**: Safe Transaction Service endpoints for Mainnet, Sepolia, Gnosis, Polygon, Base, Arbitrum, Optimism
+- **Multi-chain support**: Safe Transaction Service endpoints for 13 networks (Mainnet, Goerli, Sepolia, Optimism, Gnosis, Polygon, BNB, Arbitrum, Base, Avalanche, Celo, Polygon zkEVM, zkSync Era)
+- **Native token accuracy**: Correct native token metadata per chain (ETH, MATIC, BNB, AVAX, xDAI, CELO) for accurate balance display
+- **Error handling**: All Safe API methods properly throw errors for proper HTTP error responses instead of silent failures
 - **TypeScript types**: Comprehensive interfaces for SafeInfo, SafeBalance, SafeMultisigTransaction, SafeConfirmation from Safe API responses
+- **Write operations disabled**: Transaction proposal, signing, and execution endpoints return 501 responses directing users to Safe web interface
 - **Landing page redesign**: Custom cover page using Kong NFT banner image with centered welcome card overlay
+- **Branding update**: Replaced navbar "K" text with official King DAO emblem image
 
 ### Community Chat Feature
 - **Real-time messaging**: Implemented Socket.IO-based community chat with three channels (general, treasury, governance)

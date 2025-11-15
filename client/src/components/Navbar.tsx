@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { WalletConnect } from "./WalletConnect";
 import { Settings } from "lucide-react";
 import { useAdminStatus } from "@/hooks/useAdminStatus";
+import emblemImage from '@assets/king-emblem_1763241496953.png';
 
 export function Navbar() {
   const [location] = useLocation();
@@ -18,8 +19,8 @@ export function Navbar() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2" data-testid="link-home">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent">
-              <span className="text-lg font-bold font-heading text-white">K</span>
+            <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg">
+              <img src={emblemImage} alt="King DAO" className="h-full w-full object-contain" />
             </div>
             <span className="text-xl font-bold font-heading hidden sm:inline">KingDAO</span>
           </Link>
