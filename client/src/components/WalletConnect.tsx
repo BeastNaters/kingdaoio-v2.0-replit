@@ -38,7 +38,7 @@ export function WalletConnect({ size = 'default' }: WalletConnectProps) {
       data-testid="button-connect-wallet"
     >
       <Wallet className="h-4 w-4" />
-      <span>Connect Wallet</span>
+      <span className="font-semibold">Connect Wallet</span>
     </Button>
   );
 }
