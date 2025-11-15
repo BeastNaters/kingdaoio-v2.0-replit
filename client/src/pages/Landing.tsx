@@ -1,6 +1,7 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { WalletConnect } from "@/components/WalletConnect";
 import bannerImage from '@assets/king-banner3_1763240561143.png';
 
 export default function Landing() {
@@ -32,14 +33,17 @@ export default function Landing() {
             Web3 dashboard for Kong NFT holders
           </p>
 
-          <Button
-            size="lg"
-            className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-8 py-6 text-base shadow-[0_0_20px_rgba(220,38,38,0.5)] border border-white/20"
-            onClick={() => setLocation('/dashboard')}
-            data-testid="button-open-dashboard"
-          >
-            Open Dashboard
-          </Button>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <WalletConnect />
+            <Button
+              size="lg"
+              className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-8 py-6 text-base shadow-[0_0_20px_rgba(220,38,38,0.5)] border border-white/20"
+              onClick={() => setLocation('/dashboard')}
+              data-testid="button-enter-dashboard"
+            >
+              Enter Dashboard
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
