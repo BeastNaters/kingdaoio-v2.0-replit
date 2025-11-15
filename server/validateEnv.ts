@@ -17,12 +17,15 @@ export function validateEnvironmentVariables(): EnvValidationResult {
     errors.push('DATABASE_URL must be a valid PostgreSQL connection string (postgresql://...)');
   }
 
-  const ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL || process.env.NEXT_PUBLIC_RPC_URL;
+  const ETHEREUM_RPC_URL = process.env.ETHEREUM_RPC_URL || process.env.NEXT_PUBLIC_RPC_URL || 'https://eth.llamarpc.com';
   if (!ETHEREUM_RPC_URL) {
     errors.push('ETHEREUM_RPC_URL or NEXT_PUBLIC_RPC_URL is required for Kong NFT holder verification');
   } else {
     try {
       new URL(ETHEREUM_RPC_URL);
+      if (!process.env.ETHEREUM_RPC_URL && !process.env.NEXT_PUBLIC_RPC_URL) {
+        warnings.push('ETHEREUM_RPC_URL not set - using default public RPC endpoint (https://eth.llamarpc.com). For better performance, set your own RPC URL.');
+      }
     } catch {
       errors.push('ETHEREUM_RPC_URL must be a valid URL');
     }
