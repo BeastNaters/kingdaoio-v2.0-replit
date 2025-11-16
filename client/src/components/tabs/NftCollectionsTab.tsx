@@ -33,6 +33,12 @@ interface TotalKongNftHoldings {
   timestamp: string;
 }
 
+interface KongFloorPrice {
+  floorPrice: number;
+  currency: string;
+  source: 'dune' | 'static';
+}
+
 export function NftCollectionsTab() {
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
 
@@ -41,6 +47,13 @@ export function NftCollectionsTab() {
     queryKey: ['/api/kong-nfts/total-dao-holdings'],
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 10 * 60 * 1000, // Refetch every 10 minutes
+  });
+
+  // Fetch Kong NFT floor price from Dune Analytics
+  const { data: floorPriceData, isLoading: isLoadingFloor } = useQuery<{ success: boolean; data: KongFloorPrice }>({
+    queryKey: ['/api/kong-nfts/floor-price'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 15 * 60 * 1000, // Refetch every 15 minutes
   });
 
   const handleCopyAddress = (address: string) => {
@@ -100,12 +113,16 @@ export function NftCollectionsTab() {
                   {/* Floor Price */}
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">Floor Price</div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold font-heading" data-testid="text-kong-floor">
-                        0.050
-                      </span>
-                      <span className="text-muted-foreground">ETH</span>
-                    </div>
+                    {isLoadingFloor ? (
+                      <Skeleton className="h-12 w-32" />
+                    ) : (
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-bold font-heading" data-testid="text-kong-floor">
+                          {floorPriceData?.data?.floorPrice?.toFixed(3) || '0.050'}
+                        </span>
+                        <span className="text-muted-foreground">{floorPriceData?.data?.currency || 'ETH'}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
@@ -155,8 +172,11 @@ export function NftCollectionsTab() {
                       using the Kong NFT contract (0x6E3a2e08A88186f41ECD90E0683d9cA0983a4328).
                     </p>
                     <p>
-                      <strong>Floor Price:</strong> Current OpenSea floor price (0.050 ETH as of Nov 2025). 
-                      <span className="italic ml-1">Future: integrate dynamic price feed from OpenSea/Reservoir API.</span>
+                      <strong>Floor Price:</strong> {floorPriceData?.data?.source === 'dune' ? (
+                        <>Fetched from Dune Analytics NFT floor price query.</>
+                      ) : (
+                        <>Current OpenSea floor price (0.050 ETH as of Nov 2025). <span className="italic">Configure DUNE_NFT_FLOOR_PRICES_QUERY_ID to enable live floor price tracking.</span></>
+                      )}
                     </p>
                   </div>
                 </div>

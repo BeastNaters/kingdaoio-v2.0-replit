@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import { storage } from "./storage";
 import { isKongHolder } from "./lib/isKongHolder";
-import { fetchTokenPrices, fetchNftFloors, fetchWalletBalances } from "./lib/dune";
+import { fetchTokenPrices, fetchNftFloors, fetchWalletBalances, fetchKongNftFloorPrice } from "./lib/dune";
 import { fetchSafeBalances } from "./lib/safe";
 import { fetchTreasurySheetData } from "./lib/googleSheets";
 import { fetchSnapshotProposals } from "./lib/snapshot";
@@ -124,6 +124,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       return res.status(500).json(
         createErrorResponse(error, 'Failed to fetch NFT floor prices')
+      );
+    }
+  });
+
+  app.get("/api/kong-nfts/floor-price", async (req, res) => {
+    try {
+      const floorPrice = await fetchKongNftFloorPrice();
+      return res.json({
+        success: true,
+        data: {
+          floorPrice,
+          currency: 'ETH',
+          source: process.env.DUNE_NFT_FLOOR_PRICES_QUERY_ID ? 'dune' : 'static',
+        },
+      });
+    } catch (error: any) {
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to fetch Kong NFT floor price')
       );
     }
   });

@@ -11,9 +11,11 @@ The KingDAO Treasury Dashboard is a token-gated Web3 application designed for Ko
 - **Multi-wallet aggregation**: Calculates total KONG NFTs held by combining balances from all Safe multi-sig wallets (DAO Fund, Rewards, DCAP, Incentivization Bucket), multisig wallets, plus Controller ETH wallet
 - **Comprehensive wallet coverage**: Queries Safe wallets (env-configured), multisig wallets from daoWallets, and controller ETH wallet with automatic deduplication
 - **INCENTIVE wallet integration**: Added Incentivization Bucket Wallet (0x00239b99703b773B0A1B6A33f4691867aF071d5A) to holdings calculation
-- **Floor price display**: Shows Betting Kongs OpenSea floor price (0.050 ETH)
+- **Floor price integration**: Integrated Dune Analytics for live Kong NFT floor price tracking via `GET /api/kong-nfts/floor-price` endpoint
+- **Dune Analytics floor price query**: Created `fetchKongNftFloorPrice()` function to query NFT floor prices from Dune (falls back to 0.050 ETH if not configured)
+- **Dynamic floor price display**: Frontend fetches live floor price from Dune with 15-minute refresh interval; shows data source (Dune vs static)
 - **New API endpoint**: `GET /api/kong-nfts/total-dao-holdings` returns aggregated Kong NFT holdings with per-wallet breakdown
-- **NFT Collections tab enhancement**: Added prominent Kong NFT Holdings card displaying live total, floor price, and expandable wallet-by-wallet breakdown
+- **NFT Collections tab enhancement**: Added prominent Kong NFT Holdings card displaying live total, Dune-sourced floor price, and expandable wallet-by-wallet breakdown
 - **Error resilience**: Individual wallet query failures don't break aggregation; errors shown per-wallet with zero balance fallback
 - **Address deduplication**: Case-insensitive deduplication prevents duplicate counting when same address appears in multiple wallet sources
 - **Contract verification**: Uses Kong NFT contract address from environment variable (VITE_BETTING_KONGS_TOKEN_CONTRACT_ADDRESS: 0x6E3a2e08A88186f41ECD90E0683d9cA0983a4328)
