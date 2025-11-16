@@ -85,7 +85,7 @@ export function NftCollectionsTab() {
               </div>
             ) : kongHoldings?.success && kongHoldings?.data ? (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Total NFTs */}
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">Total Holdings</div>
@@ -103,17 +103,6 @@ export function NftCollectionsTab() {
                     <div className="flex items-baseline gap-2">
                       <span className="text-4xl font-bold font-heading" data-testid="text-kong-floor">
                         0.050
-                      </span>
-                      <span className="text-muted-foreground">ETH</span>
-                    </div>
-                  </div>
-
-                  {/* Estimated Value */}
-                  <div>
-                    <div className="text-sm text-muted-foreground mb-1">Estimated Value</div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold font-heading" data-testid="text-kong-value">
-                        {(kongHoldings.data.totalBalance * 0.050).toFixed(3)}
                       </span>
                       <span className="text-muted-foreground">ETH</span>
                     </div>

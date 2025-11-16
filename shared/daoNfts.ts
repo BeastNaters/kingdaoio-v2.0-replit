@@ -56,7 +56,8 @@ export const daoNftCollections: DaoNftCollection[] = [
     contractAddress: "0x6E3a2e08A88186f41ECD90E0683d9cA0983a4328",
     tokenIds: [267, 771, 73, 164, 218],
     links: {
-      etherscan: "https://etherscan.io/token/0x6E3a2e08A88186f41ECD90E0683d9cA0983a4328"
+      etherscan: "https://etherscan.io/token/0x6E3a2e08A88186f41ECD90E0683d9cA0983a4328",
+      opensea: "https://opensea.io/collection/konginvestment"
     }
   }
 ];
