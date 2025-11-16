@@ -6,7 +6,6 @@
 import { daoWallets } from '@shared/daoWallets';
 import { getAllConfiguredSafeWallets } from '@shared/safeWallets';
 
-const KONG_NFT_CONTRACT = '0x6E3a2e08A88186f41ECD90E0683d9cA0983a4328';
 const ERC721_BALANCE_OF_SELECTOR = '0x70a08231'; // balanceOf(address)
 
 export interface KongNftBalance {
@@ -25,11 +24,17 @@ export interface TotalKongNftHoldings {
 
 class KongNftService {
   private rpcUrl: string;
+  private kongNftContract: string;
 
   constructor() {
     this.rpcUrl = process.env.ETHEREUM_RPC_URL || process.env.NEXT_PUBLIC_RPC_URL || '';
+    this.kongNftContract = process.env.BETTING_KONGS_TOKEN_CONTRACT_ADDRESS || '';
+    
     if (!this.rpcUrl) {
       console.warn('No RPC URL configured for Kong NFT queries');
+    }
+    if (!this.kongNftContract) {
+      console.warn('Kong NFT contract address not configured (BETTING_KONGS_TOKEN_CONTRACT_ADDRESS)');
     }
   }
 
@@ -39,6 +44,10 @@ class KongNftService {
   async getKongNftBalance(address: string): Promise<number> {
     if (!this.rpcUrl) {
       throw new Error('RPC URL not configured');
+    }
+
+    if (!this.kongNftContract) {
+      throw new Error('Kong NFT contract address not configured (BETTING_KONGS_TOKEN_CONTRACT_ADDRESS)');
     }
 
     if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
@@ -60,7 +69,7 @@ class KongNftService {
           method: 'eth_call',
           params: [
             {
-              to: KONG_NFT_CONTRACT,
+              to: this.kongNftContract,
               data,
             },
             'latest',
@@ -89,6 +98,7 @@ class KongNftService {
   /**
    * Get total Kong NFT holdings across all DAO wallets
    * Queries all Safe multi-sig wallets and the controller ETH wallet
+   * Deduplicates by address to prevent double-counting
    */
   async getTotalDaoHoldings(): Promise<TotalKongNftHoldings> {
     const walletsToQuery: Array<{ address: string; label: string; type: 'safe' | 'controller' }> = [];
@@ -97,7 +107,7 @@ class KongNftService {
     const safeWallets = getAllConfiguredSafeWallets();
     safeWallets.forEach(wallet => {
       walletsToQuery.push({
-        address: wallet.address,
+        address: wallet.address.toLowerCase(), // Normalize to lowercase for deduplication
         label: wallet.name,
         type: 'safe',
       });
@@ -107,15 +117,24 @@ class KongNftService {
     const controllerWallet = daoWallets.controller.find(w => w.chain === 'ETH' && w.label === 'Controller (ETH)');
     if (controllerWallet) {
       walletsToQuery.push({
-        address: controllerWallet.address,
+        address: controllerWallet.address.toLowerCase(), // Normalize to lowercase for deduplication
         label: controllerWallet.label,
         type: 'controller',
       });
     }
 
-    // Query all wallets in parallel
+    // Deduplicate wallets by address (keep first occurrence)
+    const uniqueWallets = walletsToQuery.filter((wallet, index, self) =>
+      index === self.findIndex(w => w.address === wallet.address)
+    );
+
+    if (uniqueWallets.length < walletsToQuery.length) {
+      console.warn(`Deduplicated ${walletsToQuery.length - uniqueWallets.length} duplicate wallet address(es)`);
+    }
+
+    // Query all unique wallets in parallel
     const results = await Promise.allSettled(
-      walletsToQuery.map(async (wallet) => {
+      uniqueWallets.map(async (wallet) => {
         try {
           const balance = await this.getKongNftBalance(wallet.address);
           return {
@@ -144,7 +163,7 @@ class KongNftService {
       }
       
       // If promise rejected despite try-catch (shouldn't happen, but handle gracefully)
-      const wallet = walletsToQuery[index];
+      const wallet = uniqueWallets[index];
       return {
         address: wallet.address,
         label: wallet.label,

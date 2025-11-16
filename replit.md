@@ -6,6 +6,15 @@ The KingDAO Treasury Dashboard is a token-gated Web3 application designed for Ko
 
 ## Recent Changes (November 2025)
 
+### Kong NFT Holdings Tracker (November 16, 2025)
+- **Live blockchain queries**: Created `kongNftService` to query Kong NFT (ERC-721) balances across all DAO wallets using eth_call
+- **Multi-wallet aggregation**: Calculates total KONG NFTs held by combining balances from all Safe multi-sig wallets (DAO Fund, Rewards, DCAP) plus Controller ETH wallet
+- **New API endpoint**: `GET /api/kong-nfts/total-dao-holdings` returns aggregated Kong NFT holdings with per-wallet breakdown
+- **NFT Collections tab enhancement**: Added prominent Kong NFT Holdings card displaying live total with expandable wallet-by-wallet breakdown
+- **Error resilience**: Individual wallet query failures don't break aggregation; errors shown per-wallet with zero balance fallback
+- **Contract verification**: Uses Kong NFT contract address from environment variable (VITE_BETTING_KONGS_TOKEN_CONTRACT_ADDRESS: 0x6E3a2e08A88186f41ECD90E0683d9cA0983a4328)
+- **React Query integration**: Frontend caches Kong NFT data for 5 minutes with automatic 10-minute refetch interval
+
 ### Safe Global Core API Integration (November 15, 2025)
 - **Full Safe Transaction Service integration**: Implemented complete Safe{Core} API following official documentation at https://docs.safe.global/core-api/api-overview
 - **Read-only Safe operations**: Configured SafeService with direct REST API calls to Safe Transaction Service endpoints for viewing wallet holdings and transaction history
