@@ -1,4 +1,7 @@
-export const KONG_NFT_CONTRACT = '0x6E3a2e08A88186f41ECD90E0683d9cA0983a4328';
+// Kong NFT contract address is REQUIRED via environment variables:
+// Server: process.env.BETTING_KONGS_TOKEN_CONTRACT_ADDRESS
+// Client: import.meta.env.VITE_BETTING_KONGS_TOKEN_CONTRACT_ADDRESS
+// No fallback - application will fail if not properly configured
 
 export const SNAPSHOT_SPACE = 'kongsdao.eth';
 

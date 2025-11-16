@@ -42,9 +42,33 @@ export function validateEnvironmentVariables(): EnvValidationResult {
     }
   }
 
-  const SAFE_ADDRESS = process.env.SAFE_ADDRESS;
-  if (SAFE_ADDRESS && !isValidEthAddress(SAFE_ADDRESS)) {
-    warnings.push('SAFE_ADDRESS is set but not a valid Ethereum address');
+  // Kong NFT Contract Address (Required for token gating)
+  const KONG_CONTRACT = process.env.BETTING_KONGS_TOKEN_CONTRACT_ADDRESS;
+  if (!KONG_CONTRACT) {
+    errors.push('BETTING_KONGS_TOKEN_CONTRACT_ADDRESS is required for NFT holder verification');
+  } else if (!isValidEthAddress(KONG_CONTRACT)) {
+    errors.push('BETTING_KONGS_TOKEN_CONTRACT_ADDRESS must be a valid Ethereum address');
+  }
+
+  // Multiple Safe wallet addresses (all optional but validate if set)
+  const SAFE_DAO_FUND = process.env.SAFE_DAO_FUND_ADDRESS_ETH;
+  if (SAFE_DAO_FUND && !isValidEthAddress(SAFE_DAO_FUND)) {
+    warnings.push('SAFE_DAO_FUND_ADDRESS_ETH is set but not a valid Ethereum address');
+  }
+
+  const SAFE_REWARD = process.env.SAFE_REWARD_WALLET_ADDRESS;
+  if (SAFE_REWARD && !isValidEthAddress(SAFE_REWARD)) {
+    warnings.push('SAFE_REWARD_WALLET_ADDRESS is set but not a valid Ethereum address');
+  }
+
+  const SAFE_DCAP = process.env.SAFE_DCAP_WALLET_ADDRESS;
+  if (SAFE_DCAP && !isValidEthAddress(SAFE_DCAP)) {
+    warnings.push('SAFE_DCAP_WALLET_ADDRESS is set but not a valid Ethereum address');
+  }
+
+  // Warn if no Safe wallets configured
+  if (!SAFE_DAO_FUND && !SAFE_REWARD && !SAFE_DCAP) {
+    warnings.push('No Safe wallet addresses configured - multi-sig wallet features will use mock data');
   }
 
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;

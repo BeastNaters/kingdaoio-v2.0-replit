@@ -1,10 +1,14 @@
-import { KONG_NFT_CONTRACT } from '@shared/constants';
-
 export async function isKongHolder(address: string): Promise<boolean> {
   const rpcUrl = process.env.ETHEREUM_RPC_URL || process.env.NEXT_PUBLIC_RPC_URL;
+  const kongNftContract = process.env.BETTING_KONGS_TOKEN_CONTRACT_ADDRESS;
   
   if (!rpcUrl) {
     console.error('ETHEREUM_RPC_URL not configured');
+    return false;
+  }
+
+  if (!kongNftContract) {
+    console.error('BETTING_KONGS_TOKEN_CONTRACT_ADDRESS not configured');
     return false;
   }
 
@@ -26,7 +30,7 @@ export async function isKongHolder(address: string): Promise<boolean> {
         method: 'eth_call',
         params: [
           {
-            to: KONG_NFT_CONTRACT,
+            to: kongNftContract,
             data,
           },
           'latest',

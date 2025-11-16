@@ -730,6 +730,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/safe/all-wallets", async (req, res) => {
+    try {
+      const { getAllConfiguredSafeWallets } = await import('@shared/safeWallets');
+      const configuredWallets = getAllConfiguredSafeWallets();
+
+      if (configuredWallets.length === 0) {
+        return res.json({
+          success: true,
+          data: [],
+          message: 'No Safe wallet addresses configured',
+        });
+      }
+
+      const safeService = new SafeService();
+      const walletsData = await safeService.getMultipleWalletsBalances(configuredWallets);
+
+      const totalValue = walletsData.reduce((sum, wallet) => sum + wallet.totalUsdValue, 0);
+
+      return res.json({
+        success: true,
+        data: {
+          wallets: walletsData,
+          totalUsdValue: totalValue,
+          walletsCount: walletsData.length,
+        },
+      });
+    } catch (error: any) {
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to fetch all Safe wallets')
+      );
+    }
+  });
+
   app.get("/api/safe/transactions/pending/:safeAddress", async (req, res) => {
     try {
       const { safeAddress } = req.params;

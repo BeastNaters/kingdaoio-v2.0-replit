@@ -322,6 +322,74 @@ export class SafeService {
       logoUri: balance.token?.logoUri,
     }));
   }
+
+  /**
+   * Fetch balances from multiple Safe wallets in parallel
+   * Returns wallet metadata along with balances and total USD value
+   * Always returns proper wallet objects even when individual fetches fail
+   */
+  async getMultipleWalletsBalances(wallets: Array<{ id: string; name: string; address: string; description: string; chainId: number }>): Promise<Array<{
+    walletId: string;
+    walletName: string;
+    walletDescription: string;
+    address: string;
+    chainId: number;
+    balances: any[];
+    totalUsdValue: number;
+    error: string | null;
+  }>> {
+    const results = await Promise.allSettled(
+      wallets.map(async (wallet) => {
+        try {
+          const balances = await this.getSafeBalances(wallet.address, wallet.chainId);
+          const formattedBalances = this.formatBalancesForDisplay(balances, wallet.chainId);
+          const totalUsdValue = formattedBalances.reduce((sum, token) => sum + token.usdValue, 0);
+
+          return {
+            walletId: wallet.id,
+            walletName: wallet.name,
+            walletDescription: wallet.description,
+            address: wallet.address,
+            chainId: wallet.chainId,
+            balances: formattedBalances,
+            totalUsdValue,
+            error: null,
+          };
+        } catch (error) {
+          return {
+            walletId: wallet.id,
+            walletName: wallet.name,
+            walletDescription: wallet.description,
+            address: wallet.address,
+            chainId: wallet.chainId,
+            balances: [],
+            totalUsdValue: 0,
+            error: error instanceof Error ? error.message : 'Unknown error fetching wallet balances',
+          };
+        }
+      })
+    );
+
+    // Map all results to wallet objects, handling both fulfilled and rejected promises
+    return results.map((result, index) => {
+      if (result.status === 'fulfilled') {
+        return result.value;
+      }
+      
+      // If promise rejected despite try-catch (shouldn't happen, but handle gracefully)
+      const wallet = wallets[index];
+      return {
+        walletId: wallet.id,
+        walletName: wallet.name,
+        walletDescription: wallet.description,
+        address: wallet.address,
+        chainId: wallet.chainId,
+        balances: [],
+        totalUsdValue: 0,
+        error: result.reason instanceof Error ? result.reason.message : 'Unexpected error fetching wallet',
+      };
+    });
+  }
 }
 
 export const safeService = new SafeService();

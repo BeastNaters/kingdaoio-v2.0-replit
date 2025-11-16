@@ -1,7 +1,7 @@
 import { useAccount, useReadContract } from 'wagmi';
 import { TokenGated } from './TokenGated';
 import { Skeleton } from './ui/skeleton';
-import { KONG_NFT_CONTRACT, ERC721_ABI } from '@shared/constants';
+import { ERC721_ABI } from '@shared/constants';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -9,14 +9,15 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { address, isConnected } = useAccount();
+  const kongNftContract = import.meta.env.VITE_BETTING_KONGS_TOKEN_CONTRACT_ADDRESS as `0x${string}`;
 
   const { data: balance, isLoading } = useReadContract({
-    address: KONG_NFT_CONTRACT,
+    address: kongNftContract,
     abi: ERC721_ABI,
     functionName: 'balanceOf',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address && isConnected,
+      enabled: !!address && isConnected && !!kongNftContract,
     },
   });
 
