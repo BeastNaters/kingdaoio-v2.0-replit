@@ -85,11 +85,39 @@ export function NftCollectionsTab() {
               </div>
             ) : kongHoldings?.success && kongHoldings?.data ? (
               <>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold font-heading" data-testid="text-kong-total">
-                    {kongHoldings.data.totalBalance}
-                  </span>
-                  <span className="text-muted-foreground">KONG NFTs</span>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Total NFTs */}
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">Total Holdings</div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-bold font-heading" data-testid="text-kong-total">
+                        {kongHoldings.data.totalBalance}
+                      </span>
+                      <span className="text-muted-foreground">KONG</span>
+                    </div>
+                  </div>
+
+                  {/* Floor Price */}
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">Floor Price</div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-bold font-heading" data-testid="text-kong-floor">
+                        0.050
+                      </span>
+                      <span className="text-muted-foreground">ETH</span>
+                    </div>
+                  </div>
+
+                  {/* Estimated Value */}
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">Estimated Value</div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-bold font-heading" data-testid="text-kong-value">
+                        {(kongHoldings.data.totalBalance * 0.050).toFixed(3)}
+                      </span>
+                      <span className="text-muted-foreground">ETH</span>
+                    </div>
+                  </div>
                 </div>
                 
                 {/* Breakdown by wallet */}
@@ -132,10 +160,16 @@ export function NftCollectionsTab() {
 
                 <div className="p-4 rounded-lg bg-muted/30 border border-muted flex gap-3">
                   <Lightbulb className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Live Data:</strong> Kong NFT balances are queried in real-time from the Ethereum blockchain 
-                    using the Kong NFT contract (0x6E3a2e08A88186f41ECD90E0683d9cA0983a4328).
-                  </p>
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p>
+                      <strong>Live Data:</strong> Kong NFT balances are queried in real-time from the Ethereum blockchain 
+                      using the Kong NFT contract (0x6E3a2e08A88186f41ECD90E0683d9cA0983a4328).
+                    </p>
+                    <p>
+                      <strong>Floor Price:</strong> Current OpenSea floor price (0.050 ETH as of Nov 2025). 
+                      <span className="italic ml-1">Future: integrate dynamic price feed from OpenSea/Reservoir API.</span>
+                    </p>
+                  </div>
                 </div>
               </>
             ) : null}

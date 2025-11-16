@@ -11,12 +11,14 @@ The KingDAO Treasury Dashboard is a token-gated Web3 application designed for Ko
 - **Multi-wallet aggregation**: Calculates total KONG NFTs held by combining balances from all Safe multi-sig wallets (DAO Fund, Rewards, DCAP, Incentivization Bucket), multisig wallets, plus Controller ETH wallet
 - **Comprehensive wallet coverage**: Queries Safe wallets (env-configured), multisig wallets from daoWallets, and controller ETH wallet with automatic deduplication
 - **INCENTIVE wallet integration**: Added Incentivization Bucket Wallet (0x00239b99703b773B0A1B6A33f4691867aF071d5A) to holdings calculation
+- **Floor price display**: Shows Betting Kongs OpenSea floor price (0.050 ETH) with calculated estimated value of total holdings
 - **New API endpoint**: `GET /api/kong-nfts/total-dao-holdings` returns aggregated Kong NFT holdings with per-wallet breakdown
-- **NFT Collections tab enhancement**: Added prominent Kong NFT Holdings card displaying live total with expandable wallet-by-wallet breakdown
+- **NFT Collections tab enhancement**: Added prominent Kong NFT Holdings card displaying live total, floor price, estimated value, and expandable wallet-by-wallet breakdown
 - **Error resilience**: Individual wallet query failures don't break aggregation; errors shown per-wallet with zero balance fallback
 - **Address deduplication**: Case-insensitive deduplication prevents duplicate counting when same address appears in multiple wallet sources
 - **Contract verification**: Uses Kong NFT contract address from environment variable (VITE_BETTING_KONGS_TOKEN_CONTRACT_ADDRESS: 0x6E3a2e08A88186f41ECD90E0683d9cA0983a4328)
 - **React Query integration**: Frontend caches Kong NFT data for 5 minutes with automatic 10-minute refetch interval
+- **Future enhancement**: Floor price currently static (0.050 ETH as of Nov 2025); plan to integrate OpenSea/Reservoir API for dynamic pricing
 
 ### Safe Global Core API Integration (November 15, 2025)
 - **Full Safe Transaction Service integration**: Implemented complete Safe{Core} API following official documentation at https://docs.safe.global/core-api/api-overview
