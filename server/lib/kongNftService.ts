@@ -12,7 +12,7 @@ export interface KongNftBalance {
   address: string;
   label: string;
   balance: number;
-  walletType: 'safe' | 'controller';
+  walletType: 'safe' | 'controller' | 'multisig';
   error: string | null;
 }
 
@@ -97,35 +97,46 @@ class KongNftService {
 
   /**
    * Get total Kong NFT holdings across all DAO wallets
-   * Queries all Safe multi-sig wallets and the controller ETH wallet
+   * Queries: Safe wallets (env-configured), multisig wallets, and controller ETH wallet
    * Deduplicates by address to prevent double-counting
    */
   async getTotalDaoHoldings(): Promise<TotalKongNftHoldings> {
-    const walletsToQuery: Array<{ address: string; label: string; type: 'safe' | 'controller' }> = [];
+    const walletsToQuery: Array<{ address: string; label: string; type: 'safe' | 'controller' | 'multisig' }> = [];
 
-    // Get all configured Safe wallets
+    // Get all configured Safe wallets from environment variables
     const safeWallets = getAllConfiguredSafeWallets();
     safeWallets.forEach(wallet => {
       walletsToQuery.push({
-        address: wallet.address.toLowerCase(), // Normalize to lowercase for deduplication
+        address: wallet.address, // Keep original casing for validation
         label: wallet.name,
         type: 'safe',
       });
     });
 
+    // Add all ETH multisig wallets from daoWallets
+    daoWallets.multisigs
+      .filter(w => w.chain === 'ETH')
+      .forEach(wallet => {
+        walletsToQuery.push({
+          address: wallet.address, // Keep original casing for validation
+          label: wallet.label,
+          type: 'multisig',
+        });
+      });
+
     // Add controller ETH wallet
     const controllerWallet = daoWallets.controller.find(w => w.chain === 'ETH' && w.label === 'Controller (ETH)');
     if (controllerWallet) {
       walletsToQuery.push({
-        address: controllerWallet.address.toLowerCase(), // Normalize to lowercase for deduplication
+        address: controllerWallet.address, // Keep original casing for validation
         label: controllerWallet.label,
         type: 'controller',
       });
     }
 
-    // Deduplicate wallets by address (keep first occurrence)
+    // Deduplicate wallets by address (case-insensitive comparison, keep first occurrence)
     const uniqueWallets = walletsToQuery.filter((wallet, index, self) =>
-      index === self.findIndex(w => w.address === wallet.address)
+      index === self.findIndex(w => w.address.toLowerCase() === wallet.address.toLowerCase())
     );
 
     if (uniqueWallets.length < walletsToQuery.length) {
