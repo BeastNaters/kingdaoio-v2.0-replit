@@ -15,6 +15,7 @@ import { sanitizeError, createErrorResponse } from "./lib/errorHandler";
 import { verifyMessage } from "viem";
 import { insertCommunityMessageSchema, insertCommunityMemberSchema, insertSafeTransactionSchema, insertSafeConfirmationSchema } from "@shared/schema";
 import { SafeService } from "./lib/safeService";
+import { kongNftService } from "./lib/kongNftService";
 
 const ADMIN_ADDRESSES = (process.env.ADMIN_ADDRESSES || '').toLowerCase().split(',').filter(Boolean);
 
@@ -870,6 +871,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       return res.status(500).json(
         createErrorResponse(error, 'Failed to fetch Safes by owner')
+      );
+    }
+  });
+
+  // Kong NFT Holdings Endpoints
+  app.get("/api/kong-nfts/total-dao-holdings", async (req, res) => {
+    try {
+      const holdings = await kongNftService.getTotalDaoHoldings();
+
+      return res.json({
+        success: true,
+        data: holdings,
+      });
+    } catch (error: any) {
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to fetch total DAO Kong NFT holdings')
       );
     }
   });
