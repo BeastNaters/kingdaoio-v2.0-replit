@@ -272,7 +272,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json({
         success: true,
         data: {
-          wallets: daoWallets,
+          wallets: daoWallets.map(wallet => ({
+            label: wallet.walletLabel,
+            address: wallet.address,
+            chain: wallet.chain,
+            usdValue: wallet.usdValue,
+          })),
           totalValueUsd: totalValue,
         },
       });
@@ -290,7 +295,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json({
         success: true,
         data: {
-          wallets: tacticalWallets,
+          wallets: tacticalWallets.map(wallet => ({
+            label: wallet.walletLabel,
+            address: wallet.address,
+            chain: wallet.chain,
+            primaryAsset: wallet.primaryAsset,
+            balance: wallet.balance,
+            usdValue: wallet.usdValue,
+            purpose: wallet.purpose,
+          })),
           totalValueUsd: totalValue,
         },
       });

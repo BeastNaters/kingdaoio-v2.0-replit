@@ -2,7 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { Chain } from "@shared";
+
+type Chain = 'ETH' | 'SOL' | string;
 
 interface WalletCardProps {
   label: string;
@@ -22,9 +23,12 @@ export function WalletCard({
   className 
 }: WalletCardProps) {
   const { toast } = useToast();
+  
+  const safeLabel = label || 'Unknown Wallet';
+  const safeAddress = address || '';
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(address);
+    navigator.clipboard.writeText(safeAddress);
     toast({
       title: "Address copied",
       description: "Wallet address copied to clipboard",
@@ -39,14 +43,16 @@ export function WalletCard({
   };
 
   const truncateAddress = (addr: string): string => {
-    if (addr.length <= 16) return addr;
+    if (!addr || addr.length <= 16) return addr || '';
     return `${addr.slice(0, 8)}...${addr.slice(-6)}`;
   };
 
+  const addressPrefix = safeAddress.slice(0, 8) || 'unknown';
+
   return (
-    <Card className={className} data-testid={`card-wallet-${label.toLowerCase().replace(/\s+/g, '-')}`}>
+    <Card className={className} data-testid={`card-wallet-${safeLabel.toLowerCase().replace(/\s+/g, '-')}`}>
       <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-3">
-        <CardTitle className="text-base font-medium">{label}</CardTitle>
+        <CardTitle className="text-base font-medium">{safeLabel}</CardTitle>
         {chain === 'SOL' && (
           <span className="inline-flex items-center rounded-md bg-red-500/10 px-2 py-1 text-xs font-medium text-red-400 ring-1 ring-inset ring-red-500/20">
             Solana
@@ -55,15 +61,15 @@ export function WalletCard({
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <code className="text-sm text-muted-foreground" data-testid={`text-address-${address.slice(0, 8)}`}>
-            {truncateAddress(address)}
+          <code className="text-sm text-muted-foreground" data-testid={`text-address-${addressPrefix}`}>
+            {truncateAddress(safeAddress)}
           </code>
           <div className="flex gap-1">
             <Button
               size="icon"
               variant="ghost"
               onClick={handleCopy}
-              data-testid={`button-copy-${address.slice(0, 8)}`}
+              data-testid={`button-copy-${addressPrefix}`}
             >
               <Copy className="h-4 w-4" />
             </Button>
@@ -71,10 +77,10 @@ export function WalletCard({
               size="icon"
               variant="ghost"
               asChild
-              data-testid={`button-explorer-${address.slice(0, 8)}`}
+              data-testid={`button-explorer-${addressPrefix}`}
             >
               <a
-                href={getExplorerUrl(address, chain)}
+                href={getExplorerUrl(safeAddress, chain)}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -87,11 +93,11 @@ export function WalletCard({
         {balance && (
           <div className="space-y-1">
             <div className="text-sm text-muted-foreground">Balance</div>
-            <div className="text-lg font-semibold" data-testid={`text-balance-${address.slice(0, 8)}`}>
+            <div className="text-lg font-semibold" data-testid={`text-balance-${addressPrefix}`}>
               {balance}
             </div>
             {balanceUsd !== undefined && (
-              <div className="text-sm text-muted-foreground" data-testid={`text-balance-usd-${address.slice(0, 8)}`}>
+              <div className="text-sm text-muted-foreground" data-testid={`text-balance-usd-${addressPrefix}`}>
                 ${balanceUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             )}
