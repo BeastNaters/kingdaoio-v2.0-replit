@@ -5,7 +5,15 @@ import { storage } from "./storage";
 import { isKongHolder } from "./lib/isKongHolder";
 import { fetchTokenPrices, fetchNftFloors, fetchWalletBalances, fetchKongNftFloorPrice } from "./lib/dune";
 import { fetchSafeBalances } from "./lib/safe";
-import { fetchTreasurySheetData } from "./lib/googleSheets";
+import { 
+  fetchNftCollections, 
+  fetchDcaPortfolio, 
+  fetchOtherTokens, 
+  fetchMultiSigWallets, 
+  fetchDaoWallets, 
+  fetchTacticalWallets,
+  fetchAllTreasuryData 
+} from "./lib/googleSheets";
 import { fetchSnapshotProposals } from "./lib/snapshot";
 import { fetchDiscordAnnouncements } from "./lib/discord";
 import { getLatestSnapshot, upsertSnapshot, getHistoricalSnapshots } from "./lib/supabase";
@@ -171,13 +179,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/treasury/google-sheets", async (req, res) => {
+  app.get("/api/sheets/all", async (req, res) => {
     try {
-      const entries = await fetchTreasurySheetData();
-      return res.json(entries);
+      const data = await fetchAllTreasuryData();
+      return res.json({
+        success: true,
+        data,
+      });
     } catch (error: any) {
       return res.status(500).json(
         createErrorResponse(error, 'Failed to fetch treasury sheet data')
+      );
+    }
+  });
+
+  app.get("/api/sheets/nfts", async (req, res) => {
+    try {
+      const nftCollections = await fetchNftCollections();
+      const totalValue = nftCollections.reduce((sum, nft) => sum + nft.totalValueUsd, 0);
+      return res.json({
+        success: true,
+        data: {
+          collections: nftCollections,
+          totalValueUsd: totalValue,
+        },
+      });
+    } catch (error: any) {
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to fetch NFT collections from sheets')
+      );
+    }
+  });
+
+  app.get("/api/sheets/dca", async (req, res) => {
+    try {
+      const dcaPortfolio = await fetchDcaPortfolio();
+      const totalValue = dcaPortfolio.reduce((sum, token) => sum + token.usdValue, 0);
+      return res.json({
+        success: true,
+        data: {
+          tokens: dcaPortfolio,
+          totalValueUsd: totalValue,
+        },
+      });
+    } catch (error: any) {
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to fetch DCA portfolio from sheets')
+      );
+    }
+  });
+
+  app.get("/api/sheets/tokens", async (req, res) => {
+    try {
+      const otherTokens = await fetchOtherTokens();
+      const totalValue = otherTokens.reduce((sum, token) => sum + token.usdValue, 0);
+      return res.json({
+        success: true,
+        data: {
+          tokens: otherTokens,
+          totalValueUsd: totalValue,
+        },
+      });
+    } catch (error: any) {
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to fetch other tokens from sheets')
+      );
+    }
+  });
+
+  app.get("/api/sheets/multisig", async (req, res) => {
+    try {
+      const multiSigWallets = await fetchMultiSigWallets();
+      const totalValue = multiSigWallets.reduce((sum, wallet) => sum + wallet.totalUsdValue, 0);
+      return res.json({
+        success: true,
+        data: {
+          wallets: multiSigWallets,
+          totalValueUsd: totalValue,
+        },
+      });
+    } catch (error: any) {
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to fetch multi-sig wallets from sheets')
+      );
+    }
+  });
+
+  app.get("/api/sheets/dao-wallets", async (req, res) => {
+    try {
+      const daoWallets = await fetchDaoWallets();
+      const totalValue = daoWallets.reduce((sum, wallet) => sum + wallet.usdValue, 0);
+      return res.json({
+        success: true,
+        data: {
+          wallets: daoWallets,
+          totalValueUsd: totalValue,
+        },
+      });
+    } catch (error: any) {
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to fetch DAO wallets from sheets')
+      );
+    }
+  });
+
+  app.get("/api/sheets/tactical", async (req, res) => {
+    try {
+      const tacticalWallets = await fetchTacticalWallets();
+      const totalValue = tacticalWallets.reduce((sum, wallet) => sum + wallet.usdValue, 0);
+      return res.json({
+        success: true,
+        data: {
+          wallets: tacticalWallets,
+          totalValueUsd: totalValue,
+        },
+      });
+    } catch (error: any) {
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to fetch tactical wallets from sheets')
       );
     }
   });

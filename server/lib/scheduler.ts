@@ -1,6 +1,6 @@
 import { fetchTokenPrices, fetchWalletBalances } from './dune';
 import { fetchSafeBalances } from './safe';
-import { fetchTreasurySheetData } from './googleSheets';
+import { fetchAllTreasuryData } from './googleSheets';
 import { upsertSnapshot } from './supabase';
 import { getSocketIO } from '../routes';
 
@@ -26,7 +26,7 @@ async function generateAndSaveSnapshot(retries = 0): Promise<void> {
   try {
     console.log('Scheduled snapshot generation started...');
 
-    const [tokenPrices, safeBalances, duneBalances, sheetBalances] = await Promise.all([
+    const [tokenPrices, safeBalances, duneBalances, sheetData] = await Promise.all([
       fetchTokenPrices().catch(err => {
         console.warn('Failed to fetch token prices:', err);
         return [];
@@ -39,9 +39,9 @@ async function generateAndSaveSnapshot(retries = 0): Promise<void> {
         console.warn('Failed to fetch wallet balances:', err);
         return [];
       }),
-      fetchTreasurySheetData().catch(err => {
+      fetchAllTreasuryData().catch(err => {
         console.warn('Failed to fetch sheet data:', err);
-        return [];
+        return null;
       }),
     ]);
 
@@ -72,11 +72,39 @@ async function generateAndSaveSnapshot(retries = 0): Promise<void> {
       });
     });
 
-    sheetBalances.forEach(token => {
-      if (!tokenMap.has(token.symbol)) {
-        tokenMap.set(token.symbol, { ...token, source: 'manual' });
-      }
-    });
+    if (sheetData) {
+      sheetData.dcaPortfolio.forEach(token => {
+        const existing = tokenMap.get(token.token);
+        if (existing) {
+          existing.amount += token.amount;
+          existing.usdValue = (existing.usdValue || 0) + token.usdValue;
+        } else {
+          tokenMap.set(token.token, {
+            symbol: token.token,
+            amount: token.amount,
+            usdPrice: token.priceUsd,
+            usdValue: token.usdValue,
+            source: 'sheets' as const,
+          });
+        }
+      });
+
+      sheetData.otherTokens.forEach(token => {
+        const existing = tokenMap.get(token.token);
+        if (existing) {
+          existing.amount += token.amount;
+          existing.usdValue = (existing.usdValue || 0) + token.usdValue;
+        } else {
+          tokenMap.set(token.token, {
+            symbol: token.token,
+            amount: token.amount,
+            usdPrice: token.priceUsd,
+            usdValue: token.usdValue,
+            source: 'sheets' as const,
+          });
+        }
+      });
+    }
 
     const allTokens = Array.from(tokenMap.values());
 
@@ -86,7 +114,9 @@ async function generateAndSaveSnapshot(retries = 0): Promise<void> {
       }
     });
 
-    const totalUsdValue = allTokens.reduce((sum, token) => sum + (token.usdValue || 0), 0);
+    const sheetsTotalValue = sheetData?.totals?.grandTotal || 0;
+    const tokensTotalValue = allTokens.reduce((sum, token) => sum + (token.usdValue || 0), 0);
+    const totalUsdValue = Math.max(tokensTotalValue, sheetsTotalValue);
 
     const snapshot = {
       timestamp: new Date().toISOString(),
