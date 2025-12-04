@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Coins, Lightbulb, TrendingUp, Wallet, RefreshCw } from "lucide-react";
+import { Coins, Lightbulb, TrendingUp, Wallet, RefreshCw, AlertCircle } from "lucide-react";
 import { PortfolioChart } from "@/components/PortfolioChart";
 import { PerformanceChart } from "@/components/PerformanceChart";
 import { DataTable } from "@/components/DataTable";
@@ -51,13 +51,13 @@ interface OtherTokensResponse {
 const COLORS = ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1'];
 
 export function CryptoTab({ snapshot, isLoadingSnapshot, historicalSnapshots, isLoadingHistory }: CryptoTabProps) {
-  const { data: dcaData, isLoading: isLoadingDca, isFetching: isFetchingDca } = useQuery<DcaResponse>({
+  const { data: dcaData, isLoading: isLoadingDca, isFetching: isFetchingDca, error: dcaError } = useQuery<DcaResponse>({
     queryKey: ['/api/sheets/dca'],
     staleTime: 5 * 60 * 1000,
     refetchInterval: 10 * 60 * 1000,
   });
 
-  const { data: otherTokensData, isLoading: isLoadingOther, isFetching: isFetchingOther } = useQuery<OtherTokensResponse>({
+  const { data: otherTokensData, isLoading: isLoadingOther, isFetching: isFetchingOther, error: otherTokensError } = useQuery<OtherTokensResponse>({
     queryKey: ['/api/sheets/tokens'],
     staleTime: 5 * 60 * 1000,
     refetchInterval: 10 * 60 * 1000,
@@ -217,6 +217,16 @@ export function CryptoTab({ snapshot, isLoadingSnapshot, historicalSnapshots, is
             <div className="space-y-4">
               {isLoadingDca ? (
                 <Skeleton className="h-16 rounded" />
+              ) : dcaError ? (
+                <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 flex gap-3">
+                  <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-destructive">Failed to load DCA data from spreadsheet</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      The DCA_Portfolio sheet may not exist or be accessible. Please ensure the spreadsheet is properly configured.
+                    </p>
+                  </div>
+                </div>
               ) : (
                 <div className="flex items-baseline gap-2">
                   <span className="text-4xl font-bold font-heading" data-testid="value-dca-total">
@@ -225,17 +235,20 @@ export function CryptoTab({ snapshot, isLoadingSnapshot, historicalSnapshots, is
                   <span className="text-muted-foreground">USD</span>
                 </div>
               )}
-              <div className="p-4 rounded-lg bg-muted/30 border border-muted flex gap-3">
-                <Lightbulb className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-                <p className="text-sm text-muted-foreground">
-                  <strong>Data Source:</strong> Values are pulled from the DCA_Portfolio sheet in the Treasury Spreadsheet.
-                  Update the spreadsheet to reflect current holdings and prices.
-                </p>
-              </div>
+              {!dcaError && (
+                <div className="p-4 rounded-lg bg-muted/30 border border-muted flex gap-3">
+                  <Lightbulb className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Data Source:</strong> Values are pulled from the DCA_Portfolio sheet in the Treasury Spreadsheet.
+                    Update the spreadsheet to reflect current holdings and prices.
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
 
+        {!dcaError && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* DCA Allocation Chart */}
           <Card className="rounded-2xl">
@@ -309,6 +322,7 @@ export function CryptoTab({ snapshot, isLoadingSnapshot, historicalSnapshots, is
             </CardContent>
           </Card>
         </div>
+        )}
 
         {/* DCA Performance Placeholder */}
         <Card className="rounded-2xl border-dashed">
@@ -362,6 +376,16 @@ export function CryptoTab({ snapshot, isLoadingSnapshot, historicalSnapshots, is
             <div className="space-y-4">
               {isLoadingOther ? (
                 <Skeleton className="h-16 rounded" />
+              ) : otherTokensError ? (
+                <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 flex gap-3">
+                  <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-destructive">Failed to load Other Tokens data from spreadsheet</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      The Other_Tokens sheet may not exist or be accessible. Please ensure the spreadsheet is properly configured.
+                    </p>
+                  </div>
+                </div>
               ) : (
                 <div className="flex items-baseline gap-2">
                   <span className="text-4xl font-bold font-heading" data-testid="value-other-tokens-total">
@@ -370,17 +394,20 @@ export function CryptoTab({ snapshot, isLoadingSnapshot, historicalSnapshots, is
                   <span className="text-muted-foreground">USD</span>
                 </div>
               )}
-              <div className="p-4 rounded-lg bg-muted/30 border border-muted flex gap-3">
-                <Lightbulb className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <p className="text-sm text-muted-foreground">
-                  <strong>Data Source:</strong> Values are pulled from the Other_Tokens sheet in the Treasury Spreadsheet.
-                  Update the spreadsheet to reflect current holdings and prices.
-                </p>
-              </div>
+              {!otherTokensError && (
+                <div className="p-4 rounded-lg bg-muted/30 border border-muted flex gap-3">
+                  <Lightbulb className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Data Source:</strong> Values are pulled from the Other_Tokens sheet in the Treasury Spreadsheet.
+                    Update the spreadsheet to reflect current holdings and prices.
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
 
+        {!otherTokensError && (
         <Card className="rounded-2xl">
           <CardHeader>
             <CardTitle>Token Holdings</CardTitle>
@@ -415,6 +442,7 @@ export function CryptoTab({ snapshot, isLoadingSnapshot, historicalSnapshots, is
             )}
           </CardContent>
         </Card>
+        )}
       </div>
 
     </div>

@@ -1,4 +1,4 @@
-import { ExternalLink, Copy, CheckCircle2, Lightbulb, RefreshCw, Image } from "lucide-react";
+import { ExternalLink, Copy, CheckCircle2, Lightbulb, RefreshCw, Image, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -63,7 +63,7 @@ export function NftCollectionsTab() {
     refetchInterval: 15 * 60 * 1000,
   });
 
-  const { data: sheetsNfts, isLoading: isLoadingSheetsNfts, isFetching: isFetchingSheetsNfts } = useQuery<NftCollectionsResponse>({
+  const { data: sheetsNfts, isLoading: isLoadingSheetsNfts, isFetching: isFetchingSheetsNfts, error: sheetsNftsError } = useQuery<NftCollectionsResponse>({
     queryKey: ['/api/sheets/nfts'],
     staleTime: 5 * 60 * 1000,
     refetchInterval: 10 * 60 * 1000,
@@ -123,6 +123,16 @@ export function NftCollectionsTab() {
           <div className="space-y-4">
             {isLoadingSheetsNfts ? (
               <Skeleton className="h-12 w-48" />
+            ) : sheetsNftsError ? (
+              <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 flex gap-3">
+                <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-destructive">Failed to load NFT data from spreadsheet</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    The NFT_Collections sheet may not exist or be accessible. Please ensure the spreadsheet is properly configured.
+                  </p>
+                </div>
+              </div>
             ) : (
               <div className="flex items-baseline gap-2">
                 <span className="text-4xl font-bold font-heading" data-testid="text-nft-total-value">
@@ -131,13 +141,15 @@ export function NftCollectionsTab() {
                 <span className="text-muted-foreground">USD</span>
               </div>
             )}
-            <div className="p-4 rounded-lg bg-muted/30 border border-muted flex gap-3">
-              <Lightbulb className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-              <p className="text-sm text-muted-foreground">
-                <strong>Data Source:</strong> Values are pulled from the NFT_Collections sheet in the Treasury Spreadsheet.
-                Update the spreadsheet to reflect current collection values.
-              </p>
-            </div>
+            {!sheetsNftsError && (
+              <div className="p-4 rounded-lg bg-muted/30 border border-muted flex gap-3">
+                <Lightbulb className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                <p className="text-sm text-muted-foreground">
+                  <strong>Data Source:</strong> Values are pulled from the NFT_Collections sheet in the Treasury Spreadsheet.
+                  Update the spreadsheet to reflect current collection values.
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
