@@ -1,14 +1,13 @@
-import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Coins, Lightbulb, TrendingUp, Wallet } from "lucide-react";
+import { Coins, Lightbulb, TrendingUp, Wallet, RefreshCw } from "lucide-react";
 import { PortfolioChart } from "@/components/PortfolioChart";
 import { PerformanceChart } from "@/components/PerformanceChart";
 import { DataTable } from "@/components/DataTable";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { queryClient } from "@/lib/queryClient";
 import type { TreasurySnapshot } from "@shared/treasury-types";
-import { dcaPortfolio, otherTreasuryTokens } from "@shared/daoWallets";
-import { getTokenPrices, calculateTotalValue, calculateAllocation, type TokenPrice } from "@/lib/pricing";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
 interface CryptoTabProps {
@@ -18,30 +17,58 @@ interface CryptoTabProps {
   isLoadingHistory: boolean;
 }
 
+interface DcaToken {
+  token: string;
+  amount: number;
+  priceUsd: number;
+  usdValue: number;
+}
+
+interface DcaResponse {
+  success: boolean;
+  data: {
+    tokens: DcaToken[];
+    totalValueUsd: number;
+  };
+}
+
+interface OtherToken {
+  token: string;
+  chain: string;
+  amount: number;
+  priceUsd: number;
+  usdValue: number;
+}
+
+interface OtherTokensResponse {
+  success: boolean;
+  data: {
+    tokens: OtherToken[];
+    totalValueUsd: number;
+  };
+}
+
 const COLORS = ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1'];
 
 export function CryptoTab({ snapshot, isLoadingSnapshot, historicalSnapshots, isLoadingHistory }: CryptoTabProps) {
-  const [dcaPrices, setDcaPrices] = useState<TokenPrice>({});
-  const [otherPrices, setOtherPrices] = useState<TokenPrice>({});
-  const [isLoadingPrices, setIsLoadingPrices] = useState(true);
+  const { data: dcaData, isLoading: isLoadingDca, isFetching: isFetchingDca } = useQuery<DcaResponse>({
+    queryKey: ['/api/sheets/dca'],
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 10 * 60 * 1000,
+  });
 
-  useEffect(() => {
-    async function fetchPrices() {
-      setIsLoadingPrices(true);
-      const dcaSymbols = dcaPortfolio.map(t => t.symbol);
-      const otherSymbols = otherTreasuryTokens.map(t => t.symbol);
-      
-      const [dcaP, otherP] = await Promise.all([
-        getTokenPrices(dcaSymbols),
-        getTokenPrices(otherSymbols)
-      ]);
-      
-      setDcaPrices(dcaP);
-      setOtherPrices(otherP);
-      setIsLoadingPrices(false);
-    }
-    fetchPrices();
-  }, []);
+  const { data: otherTokensData, isLoading: isLoadingOther, isFetching: isFetchingOther } = useQuery<OtherTokensResponse>({
+    queryKey: ['/api/sheets/tokens'],
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 10 * 60 * 1000,
+  });
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/sheets/dca'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/sheets/tokens'] });
+  };
+
+  const isRefreshing = isFetchingDca || isFetchingOther;
 
   const performanceData = historicalSnapshots && historicalSnapshots.length > 0
     ? historicalSnapshots.map(s => ({
@@ -52,24 +79,57 @@ export function CryptoTab({ snapshot, isLoadingSnapshot, historicalSnapshots, is
 
   const totalCryptoValue = snapshot?.tokens?.reduce((sum, token) => sum + (token.usdValue || 0), 0) || 0;
   
-  const dcaTotalValue = calculateTotalValue(dcaPortfolio, dcaPrices);
-  const dcaAllocations = calculateAllocation(dcaPortfolio, dcaPrices);
+  const dcaTokens = dcaData?.data?.tokens || [];
+  const dcaTotalValue = dcaData?.data?.totalValueUsd || 0;
   
-  const otherTokensTotal = calculateTotalValue(otherTreasuryTokens, otherPrices);
-  const otherAllocations = calculateAllocation(otherTreasuryTokens, otherPrices);
+  const otherTokens = otherTokensData?.data?.tokens || [];
+  const otherTokensTotal = otherTokensData?.data?.totalValueUsd || 0;
 
-  const dcaChartData = dcaAllocations.map(item => ({
-    name: item.symbol,
+  const dcaChartData = dcaTokens.map(item => ({
+    name: item.token,
     value: item.usdValue,
   }));
 
+  const dcaAllocations = dcaTokens.map(token => {
+    const percentage = dcaTotalValue > 0 ? (token.usdValue / dcaTotalValue) * 100 : 0;
+    return {
+      symbol: token.token,
+      amount: token.amount,
+      usdValue: token.usdValue,
+      percentage,
+    };
+  });
+
+  const otherAllocations = otherTokens.map(token => {
+    const percentage = otherTokensTotal > 0 ? (token.usdValue / otherTokensTotal) * 100 : 0;
+    return {
+      symbol: token.token,
+      chain: token.chain,
+      amount: token.amount,
+      usdValue: token.usdValue,
+      percentage,
+    };
+  });
+
   return (
     <div className="space-y-6" data-testid="tab-crypto">
-      <div>
-        <h2 className="text-2xl font-bold font-heading mb-2">Crypto Holdings</h2>
-        <p className="text-muted-foreground">
-          Cryptocurrency and token holdings across all DAO wallets.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold font-heading mb-2">Crypto Holdings</h2>
+          <p className="text-muted-foreground">
+            Cryptocurrency and token holdings across all DAO wallets.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          data-testid="button-refresh-crypto"
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
       <Card className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 backdrop-blur-xl">
@@ -150,28 +210,27 @@ export function CryptoTab({ snapshot, isLoadingSnapshot, historicalSnapshots, is
               Total DCA Portfolio Value
             </CardTitle>
             <CardDescription>
-              Combined value of all DCA positions
+              Combined value of all DCA positions ({dcaTokens.length} tokens)
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {isLoadingPrices ? (
+              {isLoadingDca ? (
                 <Skeleton className="h-16 rounded" />
               ) : (
                 <div className="flex items-baseline gap-2">
                   <span className="text-4xl font-bold font-heading" data-testid="value-dca-total">
-                    ${dcaTotalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    ${dcaTotalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                   <span className="text-muted-foreground">USD</span>
                 </div>
               )}
               <div className="p-4 rounded-lg bg-muted/30 border border-muted flex gap-3">
                 <Lightbulb className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Mock Data:</strong> Using placeholder prices. Replace with live Web3 price API (CoinGecko, Moralis Token Price, Alchemy, or 1inch Price Oracle).
-                  </p>
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  <strong>Data Source:</strong> Values are pulled from the DCA_Portfolio sheet in the Treasury Spreadsheet.
+                  Update the spreadsheet to reflect current holdings and prices.
+                </p>
               </div>
             </div>
           </CardContent>
@@ -185,8 +244,12 @@ export function CryptoTab({ snapshot, isLoadingSnapshot, historicalSnapshots, is
               <CardDescription>Distribution by USD value</CardDescription>
             </CardHeader>
             <CardContent>
-              {isLoadingPrices ? (
+              {isLoadingDca ? (
                 <Skeleton className="h-80 rounded" />
+              ) : dcaChartData.length === 0 ? (
+                <div className="h-80 flex items-center justify-center text-muted-foreground">
+                  No DCA holdings in spreadsheet
+                </div>
               ) : (
                 <ResponsiveContainer width="100%" height={320}>
                   <PieChart>
@@ -219,8 +282,12 @@ export function CryptoTab({ snapshot, isLoadingSnapshot, historicalSnapshots, is
               <CardDescription>Token amounts and values</CardDescription>
             </CardHeader>
             <CardContent>
-              {isLoadingPrices ? (
+              {isLoadingDca ? (
                 <Skeleton className="h-80 rounded" />
+              ) : dcaAllocations.length === 0 ? (
+                <div className="h-80 flex items-center justify-center text-muted-foreground">
+                  No DCA holdings in spreadsheet
+                </div>
               ) : (
                 <div className="space-y-3">
                   <div className="grid grid-cols-4 gap-2 text-xs font-medium text-muted-foreground pb-2 border-b">
@@ -288,28 +355,27 @@ export function CryptoTab({ snapshot, isLoadingSnapshot, historicalSnapshots, is
               Total Other Tokens Value
             </CardTitle>
             <CardDescription>
-              Combined value of non-DCA token positions
+              Combined value of non-DCA token positions ({otherTokens.length} tokens)
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {isLoadingPrices ? (
+              {isLoadingOther ? (
                 <Skeleton className="h-16 rounded" />
               ) : (
                 <div className="flex items-baseline gap-2">
                   <span className="text-4xl font-bold font-heading" data-testid="value-other-tokens-total">
-                    ${otherTokensTotal.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    ${otherTokensTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                   <span className="text-muted-foreground">USD</span>
                 </div>
               )}
               <div className="p-4 rounded-lg bg-muted/30 border border-muted flex gap-3">
                 <Lightbulb className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Mock Data:</strong> Using placeholder prices. Integrate with Web3 price APIs for real-time valuations.
-                  </p>
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  <strong>Data Source:</strong> Values are pulled from the Other_Tokens sheet in the Treasury Spreadsheet.
+                  Update the spreadsheet to reflect current holdings and prices.
+                </p>
               </div>
             </div>
           </CardContent>
@@ -321,19 +387,25 @@ export function CryptoTab({ snapshot, isLoadingSnapshot, historicalSnapshots, is
             <CardDescription>Other treasury token positions</CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoadingPrices ? (
+            {isLoadingOther ? (
               <Skeleton className="h-80 rounded" />
+            ) : otherAllocations.length === 0 ? (
+              <div className="h-40 flex items-center justify-center text-muted-foreground">
+                No other tokens in spreadsheet
+              </div>
             ) : (
               <div className="space-y-3">
-                <div className="grid grid-cols-4 gap-2 text-xs font-medium text-muted-foreground pb-2 border-b">
+                <div className="grid grid-cols-5 gap-2 text-xs font-medium text-muted-foreground pb-2 border-b">
                   <div>Token</div>
+                  <div>Chain</div>
                   <div className="text-right">Amount</div>
                   <div className="text-right">USD Value</div>
                   <div className="text-right">% of Total</div>
                 </div>
                 {otherAllocations.map((token, index) => (
-                  <div key={token.symbol} className="grid grid-cols-4 gap-2 text-sm" data-testid={`other-token-${index}`}>
+                  <div key={`${token.symbol}-${token.chain}`} className="grid grid-cols-5 gap-2 text-sm" data-testid={`other-token-${index}`}>
                     <div className="font-medium">{token.symbol}</div>
+                    <div className="text-muted-foreground">{token.chain}</div>
                     <div className="text-right text-muted-foreground">{token.amount.toLocaleString()}</div>
                     <div className="text-right">${token.usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
                     <div className="text-right text-muted-foreground">{token.percentage.toFixed(1)}%</div>

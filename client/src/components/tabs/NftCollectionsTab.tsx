@@ -1,16 +1,4 @@
-// NOTE: For NFT collection valuation, it is OK to use Dune Analytics for floor price data for KING specifically.
-// For all other data (token balances, multisigs, wallets), prefer Web3 APIs.
-// 
-// Dune Analytics integration for KING NFT floor price:
-// - Query ID: Create a Dune query to fetch KING NFT floor price from OpenSea/Reservoir data
-// - Update interval: Every 15-30 minutes to track floor price changes
-// - Endpoint: /api/dune/nft-floors (returns floor prices for all collections)
-//
-// For Rollbots and Sports Rollbots floor prices:
-// - Primary option: Use Dune Analytics for consistency
-// - Alternative: OpenSea API or Reservoir API for real-time floor prices
-
-import { ExternalLink, Copy, CheckCircle2, Lightbulb, Loader2 } from "lucide-react";
+import { ExternalLink, Copy, CheckCircle2, Lightbulb, RefreshCw, Image } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { daoNftCollections } from "@shared/daoNfts";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 
 interface KongNftBalance {
   address: string;
@@ -39,22 +28,50 @@ interface KongFloorPrice {
   source: 'dune' | 'static';
 }
 
+interface KongHoldingsResponse {
+  success: boolean;
+  data: TotalKongNftHoldings;
+}
+
+interface NftCollectionFromSheets {
+  collection: string;
+  quantity: number;
+  totalValueUsd: number;
+  notes: string;
+}
+
+interface NftCollectionsResponse {
+  success: boolean;
+  data: {
+    collections: NftCollectionFromSheets[];
+    totalValueUsd: number;
+  };
+}
+
 export function NftCollectionsTab() {
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
 
-  // Fetch total Kong NFT holdings across all DAO wallets
-  const { data: kongHoldings, isLoading: isLoadingKong, error: kongError } = useQuery({
+  const { data: kongHoldings, isLoading: isLoadingKong, error: kongError } = useQuery<KongHoldingsResponse>({
     queryKey: ['/api/kong-nfts/total-dao-holdings'],
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 10 * 60 * 1000, // Refetch every 10 minutes
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 10 * 60 * 1000,
   });
 
-  // Fetch Kong NFT floor price from Dune Analytics
   const { data: floorPriceData, isLoading: isLoadingFloor } = useQuery<{ success: boolean; data: KongFloorPrice }>({
     queryKey: ['/api/kong-nfts/floor-price'],
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 15 * 60 * 1000, // Refetch every 15 minutes
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 15 * 60 * 1000,
   });
+
+  const { data: sheetsNfts, isLoading: isLoadingSheetsNfts, isFetching: isFetchingSheetsNfts } = useQuery<NftCollectionsResponse>({
+    queryKey: ['/api/sheets/nfts'],
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 10 * 60 * 1000,
+  });
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/sheets/nfts'] });
+  };
 
   const handleCopyAddress = (address: string) => {
     navigator.clipboard.writeText(address);
@@ -67,20 +84,106 @@ export function NftCollectionsTab() {
   };
 
   const totalNfts = daoNftCollections.reduce((sum, collection) => sum + collection.tokenIds.length, 0);
+  const sheetsCollections = sheetsNfts?.data?.collections || [];
+  const sheetsTotalValue = sheetsNfts?.data?.totalValueUsd || 0;
 
   return (
     <div className="space-y-6" data-testid="tab-nft-collections">
-      <div>
-        <h2 className="text-2xl font-bold font-heading mb-2">DAO-Owned NFT Collections</h2>
-        <p className="text-muted-foreground">
-          These are collections held by the DAO. Values are estimated from floor price data.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold font-heading mb-2">DAO-Owned NFT Collections</h2>
+          <p className="text-muted-foreground">
+            These are collections held by the DAO. Values are from spreadsheet or estimated from floor price data.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={isFetchingSheetsNfts}
+          data-testid="button-refresh-nfts"
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${isFetchingSheetsNfts ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
-      {/* Kong NFT Holdings Section */}
+      {/* NFT Collections from Google Sheets */}
       <Card className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 backdrop-blur-xl">
         <CardHeader>
-          <CardTitle className="text-xl">Kong NFT Holdings</CardTitle>
+          <CardTitle className="text-xl flex items-center gap-2">
+            <Image className="w-5 h-5" />
+            NFT Portfolio Value
+          </CardTitle>
+          <CardDescription>
+            Total value of all NFT collections from Treasury Spreadsheet
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {isLoadingSheetsNfts ? (
+              <Skeleton className="h-12 w-48" />
+            ) : (
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold font-heading" data-testid="text-nft-total-value">
+                  ${sheetsTotalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+                <span className="text-muted-foreground">USD</span>
+              </div>
+            )}
+            <div className="p-4 rounded-lg bg-muted/30 border border-muted flex gap-3">
+              <Lightbulb className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+              <p className="text-sm text-muted-foreground">
+                <strong>Data Source:</strong> Values are pulled from the NFT_Collections sheet in the Treasury Spreadsheet.
+                Update the spreadsheet to reflect current collection values.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* NFT Collections Table from Sheets */}
+      {sheetsCollections.length > 0 && (
+        <Card className="rounded-2xl">
+          <CardHeader>
+            <CardTitle>NFT Collections</CardTitle>
+            <CardDescription>
+              {sheetsCollections.length} collection{sheetsCollections.length !== 1 ? 's' : ''} from spreadsheet
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="grid grid-cols-4 gap-2 text-xs font-medium text-muted-foreground pb-2 border-b">
+                <div>Collection</div>
+                <div className="text-right">Quantity</div>
+                <div className="text-right">Total Value</div>
+                <div>Notes</div>
+              </div>
+              {sheetsCollections.map((collection, index) => (
+                <div 
+                  key={collection.collection} 
+                  className="grid grid-cols-4 gap-2 text-sm py-2 border-b border-muted/30 last:border-0"
+                  data-testid={`sheets-nft-${index}`}
+                >
+                  <div className="font-medium">{collection.collection}</div>
+                  <div className="text-right text-muted-foreground">{collection.quantity}</div>
+                  <div className="text-right font-medium">
+                    ${collection.totalValueUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
+                  <div className="text-muted-foreground text-xs truncate" title={collection.notes}>
+                    {collection.notes || '-'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Kong NFT Holdings Section */}
+      <Card className="rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/10 to-accent/5 backdrop-blur-xl">
+        <CardHeader>
+          <CardTitle className="text-xl">Kong NFT Holdings (Live)</CardTitle>
           <CardDescription>
             Total KONG NFTs held across all DAO wallets (Safe multi-sigs + Controller wallet)
           </CardDescription>
@@ -99,7 +202,6 @@ export function NftCollectionsTab() {
             ) : kongHoldings?.success && kongHoldings?.data ? (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Total NFTs */}
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">Total Holdings</div>
                     <div className="flex items-baseline gap-2">
@@ -110,7 +212,6 @@ export function NftCollectionsTab() {
                     </div>
                   </div>
 
-                  {/* Floor Price */}
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">Floor Price</div>
                     {isLoadingFloor ? (
@@ -126,7 +227,6 @@ export function NftCollectionsTab() {
                   </div>
                 </div>
                 
-                {/* Breakdown by wallet */}
                 <details className="group">
                   <summary 
                     className="cursor-pointer text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
@@ -136,7 +236,7 @@ export function NftCollectionsTab() {
                     <span className="text-xs group-open:rotate-180 transition-transform">▼</span>
                   </summary>
                   <div className="mt-3 space-y-2">
-                    {kongHoldings.data.wallets.map((wallet) => (
+                    {kongHoldings.data.wallets.map((wallet: KongNftBalance) => (
                       <div
                         key={wallet.address}
                         className="p-3 rounded-lg bg-muted/20 border border-muted/30 flex justify-between items-center"
@@ -165,7 +265,7 @@ export function NftCollectionsTab() {
                 </details>
 
                 <div className="p-4 rounded-lg bg-muted/30 border border-muted flex gap-3">
-                  <Lightbulb className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <Lightbulb className="w-4 h-4 text-accent shrink-0 mt-0.5" />
                   <div className="text-sm text-muted-foreground space-y-1">
                     <p>
                       <strong>Live Data:</strong> Kong NFT balances are queried in real-time from the Ethereum blockchain 
@@ -186,10 +286,10 @@ export function NftCollectionsTab() {
         </CardContent>
       </Card>
 
-      {/* Other NFT Collections */}
-      <Card className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 to-primary/5 backdrop-blur-xl">
+      {/* Other NFT Collections from Config */}
+      <Card className="rounded-2xl border border-white/10 bg-card/50 backdrop-blur-xl">
         <CardHeader>
-          <CardTitle className="text-xl">Other NFT Collections</CardTitle>
+          <CardTitle className="text-xl">Other NFT Collections (Hardcoded)</CardTitle>
           <CardDescription>
             Additional NFT collections held by the DAO ({daoNftCollections.length} collections)
           </CardDescription>
@@ -203,9 +303,8 @@ export function NftCollectionsTab() {
             <div className="p-4 rounded-lg bg-muted/30 border border-muted flex gap-3">
               <Lightbulb className="w-4 h-4 text-primary shrink-0 mt-0.5" />
               <p className="text-sm text-muted-foreground">
-                <strong>Integration Note:</strong> Connect to Dune Analytics floor price API 
-                (<code className="text-xs bg-background/50 px-1 py-0.5 rounded">/api/dune/nft-floors</code>) 
-                to calculate estimated USD value (floor price × quantity per collection).
+                <strong>Note:</strong> These collections are configured in the codebase.
+                Values from the NFT_Collections spreadsheet (above) take precedence for treasury calculations.
               </p>
             </div>
           </div>
@@ -300,7 +399,7 @@ export function NftCollectionsTab() {
                     <div>
                       <div className="text-sm text-muted-foreground mb-1">Est. Floor Value</div>
                       <div className="text-sm text-muted-foreground italic">
-                        Connect to floor price API
+                        See spreadsheet for value
                       </div>
                     </div>
                   </div>
@@ -333,30 +432,6 @@ export function NftCollectionsTab() {
           </Card>
         ))}
       </div>
-
-      <Card className="rounded-2xl border border-white/10 bg-card/50 backdrop-blur-xl">
-        <CardContent className="pt-6">
-          <div className="space-y-2 text-sm text-muted-foreground">
-            <p>
-              <strong>Future Integration Points:</strong>
-            </p>
-            <ul className="list-disc list-inside space-y-1 ml-2">
-              <li>
-                <strong>Dune Analytics:</strong> Query NFT floor prices by contract address
-              </li>
-              <li>
-                <strong>Supabase:</strong> Load collection metadata and token IDs from database instead of hardcoding
-              </li>
-              <li>
-                <strong>Moralis:</strong> Fetch real-time NFT metadata and images for each token
-              </li>
-              <li>
-                <strong>OpenSea API:</strong> Get collection stats, volume, and sales data
-              </li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
