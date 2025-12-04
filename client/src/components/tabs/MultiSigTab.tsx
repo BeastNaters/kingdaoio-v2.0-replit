@@ -123,7 +123,7 @@ export function MultiSigTab() {
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
             <Shield className="w-5 h-5" />
-            Total Multi-Sig Value
+            Multi-Sig Value (DAO Operations)
           </CardTitle>
           <CardDescription>
             Combined value across {walletsData.length} Gnosis Safe wallet{walletsData.length !== 1 ? 's' : ''}
