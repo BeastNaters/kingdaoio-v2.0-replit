@@ -207,17 +207,12 @@ export function CryptoTab({ snapshot, isLoadingSnapshot, historicalSnapshots, is
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div>
-          {isLoadingTreasuryHistory ? (
-            <Skeleton className="h-96 rounded-2xl" />
-          ) : (
-            <PerformanceChart data={treasuryPerformanceData} />
-          )}
-        </div>
-        <div>
-          <DcaPerformanceChart data={dcaPerformanceData} isLoading={isLoadingDcaHistory} />
-        </div>
+      <div>
+        {isLoadingTreasuryHistory ? (
+          <Skeleton className="h-96 rounded-2xl" />
+        ) : (
+          <PerformanceChart data={treasuryPerformanceData} />
+        )}
       </div>
 
       {/* DCA Portfolio Section */}
@@ -351,32 +346,8 @@ export function CryptoTab({ snapshot, isLoadingSnapshot, historicalSnapshots, is
         </div>
         )}
 
-        {/* DCA Performance Placeholder */}
-        <Card className="rounded-2xl border-dashed">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
-              DCA Portfolio Performance
-            </CardTitle>
-            <CardDescription>
-              Historical performance tracking
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="p-6 rounded-lg bg-muted/30 border border-muted flex gap-3">
-              <Lightbulb className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Integration Required</p>
-                <p className="text-sm text-muted-foreground">
-                  Hook this up to historical token price data to track DCA performance over time.
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  <strong>Recommended:</strong> Store periodic snapshots of DCA holdings in Supabase, then fetch historical prices from CoinGecko Historical API or similar service to calculate performance trends.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* DCA Performance Chart */}
+        <DcaPerformanceChart data={dcaPerformanceData} isLoading={isLoadingDcaHistory} />
       </div>
 
       {/* Other Treasury Tokens Section */}

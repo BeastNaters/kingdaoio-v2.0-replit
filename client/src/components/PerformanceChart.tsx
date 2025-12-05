@@ -15,12 +15,12 @@ function extractYear(rawDate: string | undefined, formattedDate: string): string
   if (rawDate) {
     if (rawDate.includes('/')) {
       const parts = rawDate.split('/');
-      const yearPart = parts[2];
+      const yearPart = parts[parts.length - 1];
       if (yearPart.length === 2) {
         const year = parseInt(yearPart);
         return year >= 0 && year <= 30 ? `20${yearPart}` : `19${yearPart}`;
       }
-      return yearPart;
+      return yearPart.length === 4 ? yearPart : `20${yearPart}`;
     }
     if (rawDate.includes('-')) {
       return rawDate.split('-')[0];
@@ -31,30 +31,56 @@ function extractYear(rawDate: string | undefined, formattedDate: string): string
   return new Date().getFullYear().toString();
 }
 
-export function PerformanceChart({ data }: PerformanceChartProps) {
-  const availableYears = useMemo(() => {
-    if (!data || data.length === 0) return ['2023', '2024', '2025'];
-    const years = new Set<string>();
-    data.forEach(item => {
-      const year = extractYear(item.rawDate, item.date);
-      years.add(year);
-    });
-    return Array.from(years).sort();
-  }, [data]);
+function getMonthFromDate(rawDate: string | undefined): string {
+  if (!rawDate) return '';
+  
+  let month: number;
+  if (rawDate.includes('/')) {
+    month = parseInt(rawDate.split('/')[0]);
+  } else if (rawDate.includes('-')) {
+    month = parseInt(rawDate.split('-')[1]);
+  } else {
+    return '';
+  }
+  
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return months[month - 1] || '';
+}
 
-  const [selectedYear, setSelectedYear] = useState<string>(
-    availableYears.includes('2025') ? '2025' : availableYears[availableYears.length - 1] || '2025'
-  );
+function formatYAxisValue(value: number): string {
+  if (value >= 1000000) {
+    return `$${(value / 1000000).toFixed(1)}M`;
+  } else if (value >= 1000) {
+    return `$${(value / 1000).toFixed(0)}k`;
+  }
+  return `$${value}`;
+}
+
+export function PerformanceChart({ data }: PerformanceChartProps) {
+  const [selectedYear, setSelectedYear] = useState<string>('all');
 
   const filteredData = useMemo(() => {
     if (!data || data.length === 0) return [];
-    return data.filter(item => {
-      const year = extractYear(item.rawDate, item.date);
-      return year === selectedYear;
-    });
+    
+    if (selectedYear === 'all') {
+      return data.map(item => ({
+        ...item,
+        monthLabel: getMonthFromDate(item.rawDate)
+      }));
+    }
+    
+    return data
+      .filter(item => {
+        const year = extractYear(item.rawDate, item.date);
+        return year === selectedYear;
+      })
+      .map(item => ({
+        ...item,
+        monthLabel: getMonthFromDate(item.rawDate)
+      }));
   }, [data, selectedYear]);
 
-  const displayYears = ['2023', '2024', '2025'];
+  const displayYears = ['all', '2023', '2024', '2025'];
 
   if (!data || data.length === 0) {
     return (
@@ -66,6 +92,9 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
       </Card>
     );
   }
+
+  const maxValue = Math.max(...filteredData.map(d => d.value), 0);
+  const yAxisDomain = [0, Math.ceil(maxValue * 1.1)];
 
   return (
     <Card className="rounded-2xl border border-white/10 bg-card/50 backdrop-blur-xl p-6" data-testid="card-performance-chart">
@@ -80,7 +109,7 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
                 className="text-xs px-3 h-7"
                 data-testid={`tab-treasury-${year}`}
               >
-                {year}
+                {year === 'all' ? 'All' : year}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -101,14 +130,18 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
             <XAxis
-              dataKey="date"
+              dataKey="monthLabel"
               stroke="hsl(var(--muted-foreground))"
               fontSize={12}
+              interval="preserveStartEnd"
+              tickMargin={8}
             />
             <YAxis
               stroke="hsl(var(--muted-foreground))"
               fontSize={12}
-              tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+              domain={yAxisDomain}
+              tickFormatter={formatYAxisValue}
+              width={70}
             />
             <Tooltip
               contentStyle={{
@@ -117,6 +150,12 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
                 borderRadius: '0.5rem',
               }}
               formatter={(value: number) => [`$${value.toLocaleString()}`, 'Value']}
+              labelFormatter={(label, payload) => {
+                if (payload && payload[0]?.payload?.date) {
+                  return payload[0].payload.date;
+                }
+                return label;
+              }}
             />
             <Area
               type="monotone"
