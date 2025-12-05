@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Coins, Lightbulb, TrendingUp, Wallet, RefreshCw, AlertCircle } from "lucide-react";
 import { PortfolioChart } from "@/components/PortfolioChart";
 import { PerformanceChart } from "@/components/PerformanceChart";
+import { DcaPerformanceChart } from "@/components/DcaPerformanceChart";
 import { DataTable } from "@/components/DataTable";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,17 @@ interface OtherTokensResponse {
   };
 }
 
+interface HistoryDataPoint {
+  date: string;
+  value: number;
+  rawDate: string;
+}
+
+interface HistoryResponse {
+  success: boolean;
+  data: HistoryDataPoint[];
+}
+
 const COLORS = ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1'];
 
 export function CryptoTab({ snapshot, isLoadingSnapshot, historicalSnapshots, isLoadingHistory }: CryptoTabProps) {
@@ -63,19 +75,29 @@ export function CryptoTab({ snapshot, isLoadingSnapshot, historicalSnapshots, is
     refetchInterval: 10 * 60 * 1000,
   });
 
+  const { data: treasuryHistoryData, isLoading: isLoadingTreasuryHistory } = useQuery<HistoryResponse>({
+    queryKey: ['/api/sheets/treasury-history'],
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 15 * 60 * 1000,
+  });
+
+  const { data: dcaHistoryData, isLoading: isLoadingDcaHistory } = useQuery<HistoryResponse>({
+    queryKey: ['/api/sheets/dca-history'],
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 15 * 60 * 1000,
+  });
+
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['/api/sheets/dca'] });
     queryClient.invalidateQueries({ queryKey: ['/api/sheets/tokens'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/sheets/treasury-history'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/sheets/dca-history'] });
   };
 
   const isRefreshing = isFetchingDca || isFetchingOther;
 
-  const performanceData = historicalSnapshots && historicalSnapshots.length > 0
-    ? historicalSnapshots.map(s => ({
-        date: new Date(s.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        value: s.totalUsdValue,
-      }))
-    : [];
+  const treasuryPerformanceData = treasuryHistoryData?.data || [];
+  const dcaPerformanceData = dcaHistoryData?.data || [];
 
   const totalCryptoValue = snapshot?.tokens?.reduce((sum, token) => sum + (token.usdValue || 0), 0) || 0;
   
@@ -185,12 +207,17 @@ export function CryptoTab({ snapshot, isLoadingSnapshot, historicalSnapshots, is
         )}
       </div>
 
-      <div>
-        {isLoadingHistory ? (
-          <Skeleton className="h-96 rounded-2xl" />
-        ) : (
-          <PerformanceChart data={performanceData} />
-        )}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          {isLoadingTreasuryHistory ? (
+            <Skeleton className="h-96 rounded-2xl" />
+          ) : (
+            <PerformanceChart data={treasuryPerformanceData} />
+          )}
+        </div>
+        <div>
+          <DcaPerformanceChart data={dcaPerformanceData} isLoading={isLoadingDcaHistory} />
+        </div>
       </div>
 
       {/* DCA Portfolio Section */}

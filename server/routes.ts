@@ -12,7 +12,9 @@ import {
   fetchMultiSigWallets, 
   fetchDaoWallets, 
   fetchTacticalWallets,
-  fetchAllTreasuryData 
+  fetchAllTreasuryData,
+  fetchTreasuryHistory,
+  fetchDcaHistory
 } from "./lib/googleSheets";
 import { fetchSnapshotProposals } from "./lib/snapshot";
 import { fetchDiscordAnnouncements } from "./lib/discord";
@@ -243,6 +245,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       return res.status(500).json(
         createErrorResponse(error, 'Failed to fetch other tokens from sheets')
+      );
+    }
+  });
+
+  app.get("/api/sheets/treasury-history", async (req, res) => {
+    try {
+      const history = await fetchTreasuryHistory();
+      const chartData = history.map(row => ({
+        date: new Date(row.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        value: row.totalValueUsd,
+        rawDate: row.date,
+      }));
+      return res.json({
+        success: true,
+        data: chartData,
+      });
+    } catch (error: any) {
+      console.error('Error fetching treasury history:', error);
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to fetch treasury history from sheets')
+      );
+    }
+  });
+
+  app.get("/api/sheets/dca-history", async (req, res) => {
+    try {
+      const history = await fetchDcaHistory();
+      const chartData = history.map(row => ({
+        date: new Date(row.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        value: row.totalValueUsd,
+        rawDate: row.date,
+      }));
+      return res.json({
+        success: true,
+        data: chartData,
+      });
+    } catch (error: any) {
+      console.error('Error fetching DCA history:', error);
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to fetch DCA history from sheets')
       );
     }
   });

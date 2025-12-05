@@ -311,6 +311,73 @@ export async function fetchTacticalWallets(): Promise<TacticalWalletRow[]> {
   }
 }
 
+export interface HistoryRow {
+  date: string;
+  totalValueUsd: number;
+}
+
+export async function fetchTreasuryHistory(): Promise<HistoryRow[]> {
+  const spreadsheetId = getSpreadsheetId();
+  
+  try {
+    const sheets = await getUncachableGoogleSheetClient();
+    
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'Treasury_History!A:B',
+    });
+
+    const rows = response.data.values;
+    if (!rows || rows.length <= 1) {
+      return [];
+    }
+
+    const [, ...dataRows] = rows;
+    
+    return dataRows
+      .filter(row => row[0] && row[1])
+      .map((row) => ({
+        date: row[0] || '',
+        totalValueUsd: parseFloat(row[1]) || 0,
+      }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  } catch (error) {
+    console.error('Error fetching Treasury History:', error);
+    throw error;
+  }
+}
+
+export async function fetchDcaHistory(): Promise<HistoryRow[]> {
+  const spreadsheetId = getSpreadsheetId();
+  
+  try {
+    const sheets = await getUncachableGoogleSheetClient();
+    
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'DCA_History!A:B',
+    });
+
+    const rows = response.data.values;
+    if (!rows || rows.length <= 1) {
+      return [];
+    }
+
+    const [, ...dataRows] = rows;
+    
+    return dataRows
+      .filter(row => row[0] && row[1])
+      .map((row) => ({
+        date: row[0] || '',
+        totalValueUsd: parseFloat(row[1]) || 0,
+      }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  } catch (error) {
+    console.error('Error fetching DCA History:', error);
+    throw error;
+  }
+}
+
 export async function fetchAllTreasuryData() {
   const [nftCollections, dcaPortfolio, otherTokens, multiSigWallets, daoWallets, tacticalWallets] = await Promise.all([
     fetchNftCollections().catch(() => []),
