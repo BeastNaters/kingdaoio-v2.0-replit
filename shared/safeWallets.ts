@@ -9,7 +9,7 @@ export interface SafeWalletConfig {
   envVarName: string;
   description: string;
   chainId: number;
-  category: 'treasury' | 'rewards' | 'dca';
+  category: 'treasury' | 'rewards' | 'dca' | 'incentive';
 }
 
 /**
@@ -40,6 +40,14 @@ export const SAFE_WALLETS: SafeWalletConfig[] = [
     description: 'Dollar-cost averaging and tactical trading portfolio',
     chainId: 1,
     category: 'dca',
+  },
+  {
+    id: 'incentive',
+    name: 'Incentivization Bucket',
+    envVarName: 'SAFE_INCENTIVE_WALLET_ADDRESS',
+    description: 'Wallet for community incentives and ecosystem growth initiatives',
+    chainId: 1,
+    category: 'treasury',
   },
 ];
 

@@ -4,6 +4,17 @@
 
 The KingDAO Treasury Dashboard is a token-gated Web3 application designed for Kong NFT holders. Its primary purpose is to provide exclusive, real-time visibility into the DAO's financial treasury, governance activities, and community announcements. The platform aggregates data from various sources (Gnosis Safe, Dune Analytics, Google Sheets, on-chain RPC) to display comprehensive treasury assets, portfolio allocation, DAO-owned NFT holdings, community governance proposals from Snapshot, and Discord announcements. The dashboard features a modern, dark-themed glassmorphic interface, drawing inspiration from leading DeFi platforms, to offer a sophisticated and user-friendly experience for DAO members.
 
+## Recent Changes (December 2025)
+
+### Multi-Sig Tab Fixes (December 5, 2025)
+- **Incentivization wallet added**: Added 4th Safe wallet (Incentivization Bucket) to `shared/safeWallets.ts` config using `SAFE_INCENTIVE_WALLET_ADDRESS` environment variable
+- **Safe API endpoint update**: Changed from deprecated `/balances/usd/` to `/balances/?trusted=true&exclude_spam=true` endpoint
+- **Redirect handling**: Added `redirect: 'follow'` to all Safe API fetch calls to handle 308 redirects from Safe Transaction Service
+- **Rate limiting prevention**: Changed from parallel requests to sequential with 300ms delay between wallet queries to avoid "Too Many Requests" errors
+- **Dynamic price fetching**: Integrated CoinGecko API to fetch live prices for ETH, BTC, LINK; stablecoins (USDC, USDT, DAI) hardcoded to $1
+- **Price calculation**: Updated `formatBalancesForDisplay` to calculate USD values using fetched prices instead of removed fiatBalance/fiatConversion fields
+- **All 4 Safe wallets now display correctly**: DAO Treasury Fund, Reward Distribution, DCA Portfolio, and Incentivization Bucket
+
 ## Recent Changes (November 2025)
 
 ### Kong NFT Holdings Tracker (November 16, 2025)

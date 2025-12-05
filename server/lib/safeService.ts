@@ -54,9 +54,6 @@ export interface SafeBalance {
     logoUri: string;
   } | null;
   balance: string;
-  fiatBalance: string;
-  fiatConversion: string;
-  fiatCode: string;
 }
 
 export interface SafeMultisigTransaction {
@@ -125,7 +122,9 @@ export class SafeService {
   async getSafeInfo(safeAddress: string, chainId: number = 1): Promise<SafeInfo> {
     const baseUrl = this.getTxServiceUrl(chainId);
     
-    const response = await fetch(`${baseUrl}/api/v1/safes/${safeAddress}/`);
+    const response = await fetch(`${baseUrl}/api/v1/safes/${safeAddress}/`, {
+      redirect: 'follow',
+    });
     
     if (!response.ok) {
       throw new Error(`Safe API error: ${response.statusText}`);
@@ -138,7 +137,9 @@ export class SafeService {
   async getSafeBalances(safeAddress: string, chainId: number = 1): Promise<SafeBalance[]> {
     const baseUrl = this.getTxServiceUrl(chainId);
 
-    const response = await fetch(`${baseUrl}/api/v1/safes/${safeAddress}/balances/usd/`);
+    const response = await fetch(`${baseUrl}/api/v1/safes/${safeAddress}/balances/?trusted=true&exclude_spam=true`, {
+      redirect: 'follow',
+    });
     
     if (!response.ok) {
       throw new Error(`Safe API error: ${response.statusText}`);
@@ -167,7 +168,7 @@ export class SafeService {
 
     const url = `${baseUrl}/api/v1/safes/${safeAddress}/multisig-transactions/?${params.toString()}`;
 
-    const response = await fetch(url);
+    const response = await fetch(url, { redirect: 'follow' });
     
     if (!response.ok) {
       throw new Error(`Safe API error: ${response.statusText}`);
@@ -196,7 +197,9 @@ export class SafeService {
   async getTransaction(safeTxHash: string, chainId: number): Promise<SafeMultisigTransaction> {
     const baseUrl = this.getTxServiceUrl(chainId);
 
-    const response = await fetch(`${baseUrl}/api/v1/multisig-transactions/${safeTxHash}/`);
+    const response = await fetch(`${baseUrl}/api/v1/multisig-transactions/${safeTxHash}/`, {
+      redirect: 'follow',
+    });
     
     if (!response.ok) {
       throw new Error(`Safe API error: ${response.statusText}`);
@@ -208,7 +211,9 @@ export class SafeService {
   async getTransactionConfirmations(safeTxHash: string, chainId: number): Promise<SafeConfirmation[]> {
     const baseUrl = this.getTxServiceUrl(chainId);
 
-    const response = await fetch(`${baseUrl}/api/v1/multisig-transactions/${safeTxHash}/confirmations/`);
+    const response = await fetch(`${baseUrl}/api/v1/multisig-transactions/${safeTxHash}/confirmations/`, {
+      redirect: 'follow',
+    });
     
     if (!response.ok) {
       throw new Error(`Safe API error: ${response.statusText}`);
@@ -231,7 +236,7 @@ export class SafeService {
 
     const url = `${baseUrl}/api/v1/safes/${safeAddress}/all-transactions/?${params.toString()}`;
 
-    const response = await fetch(url);
+    const response = await fetch(url, { redirect: 'follow' });
     
     if (!response.ok) {
       throw new Error(`Safe API error: ${response.statusText}`);
@@ -253,7 +258,7 @@ export class SafeService {
 
     const url = `${baseUrl}/api/v1/safes/${safeAddress}/incoming-transfers/?${params.toString()}`;
 
-    const response = await fetch(url);
+    const response = await fetch(url, { redirect: 'follow' });
     
     if (!response.ok) {
       throw new Error(`Safe API error: ${response.statusText}`);
@@ -266,7 +271,9 @@ export class SafeService {
   async getSafesByOwner(ownerAddress: string, chainId: number = 1): Promise<{ safes: string[] }> {
     const baseUrl = this.getTxServiceUrl(chainId);
 
-    const response = await fetch(`${baseUrl}/api/v1/owners/${ownerAddress}/safes/`);
+    const response = await fetch(`${baseUrl}/api/v1/owners/${ownerAddress}/safes/`, {
+      redirect: 'follow',
+    });
     
     if (!response.ok) {
       throw new Error(`Safe API error: ${response.statusText}`);
@@ -292,6 +299,7 @@ export class SafeService {
         headers: {
           'Content-Type': 'application/json',
         },
+        redirect: 'follow',
         body: JSON.stringify({
           to,
           value,
@@ -308,19 +316,80 @@ export class SafeService {
     return await response.json();
   }
 
-  formatBalancesForDisplay(balances: SafeBalance[], chainId: number = 1): any[] {
+  formatBalancesForDisplay(balances: SafeBalance[], chainId: number = 1, prices: { [symbol: string]: number } = {}): any[] {
     const nativeToken = NATIVE_TOKEN_METADATA[chainId] || NATIVE_TOKEN_METADATA[1];
     
-    return balances.map((balance: SafeBalance) => ({
-      symbol: balance.token?.symbol || nativeToken.symbol,
-      name: balance.token?.name || nativeToken.name,
-      amount: parseFloat(balance.balance) / Math.pow(10, balance.token?.decimals || nativeToken.decimals),
-      usdPrice: parseFloat(balance.fiatConversion) || 0,
-      usdValue: parseFloat(balance.fiatBalance) || 0,
-      source: 'safe' as const,
-      tokenAddress: balance.tokenAddress,
-      logoUri: balance.token?.logoUri,
-    }));
+    return balances.map((balance: SafeBalance) => {
+      const decimals = balance.token?.decimals || nativeToken.decimals;
+      const symbol = balance.token?.symbol || nativeToken.symbol;
+      const amount = parseFloat(balance.balance) / Math.pow(10, decimals);
+      
+      let usdValue = 0;
+      const price = prices[symbol] || 0;
+      
+      if (!balance.tokenAddress) {
+        usdValue = amount * (prices.ETH || 3500);
+      } else if (price > 0) {
+        usdValue = amount * price;
+      }
+      
+      return {
+        symbol,
+        name: balance.token?.name || nativeToken.name,
+        amount,
+        usdPrice: amount > 0 ? usdValue / amount : 0,
+        usdValue,
+        source: 'safe' as const,
+        tokenAddress: balance.tokenAddress,
+        logoUri: balance.token?.logoUri,
+      };
+    });
+  }
+
+  /**
+   * Fetch current crypto prices from CoinGecko
+   */
+  private async getCryptoPrices(): Promise<{ [symbol: string]: number }> {
+    const defaultPrices: { [symbol: string]: number } = {
+      ETH: 3500,
+      WETH: 3500,
+      WBTC: 100000,
+      BTC: 100000,
+      LINK: 15,
+      USDC: 1,
+      USDT: 1,
+      DAI: 1,
+    };
+    
+    try {
+      const response = await fetch(
+        'https://api.coingecko.com/api/v3/simple/price?ids=ethereum,bitcoin,chainlink&vs_currencies=usd',
+        { redirect: 'follow' }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          ETH: data.ethereum?.usd || defaultPrices.ETH,
+          WETH: data.ethereum?.usd || defaultPrices.WETH,
+          BTC: data.bitcoin?.usd || defaultPrices.BTC,
+          WBTC: data.bitcoin?.usd || defaultPrices.WBTC,
+          LINK: data.chainlink?.usd || defaultPrices.LINK,
+          USDC: 1,
+          USDT: 1,
+          DAI: 1,
+        };
+      }
+    } catch (error) {
+      console.error('Failed to fetch crypto prices:', error);
+    }
+    return defaultPrices;
+  }
+
+  /**
+   * Add delay between requests to avoid rate limiting
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**
@@ -338,57 +407,51 @@ export class SafeService {
     totalUsdValue: number;
     error: string | null;
   }>> {
-    const results = await Promise.allSettled(
-      wallets.map(async (wallet) => {
-        try {
-          const balances = await this.getSafeBalances(wallet.address, wallet.chainId);
-          const formattedBalances = this.formatBalancesForDisplay(balances, wallet.chainId);
-          const totalUsdValue = formattedBalances.reduce((sum, token) => sum + token.usdValue, 0);
+    const prices = await this.getCryptoPrices();
+    
+    const results: Array<{
+      walletId: string;
+      walletName: string;
+      walletDescription: string;
+      address: string;
+      chainId: number;
+      balances: any[];
+      totalUsdValue: number;
+      error: string | null;
+    }> = [];
 
-          return {
-            walletId: wallet.id,
-            walletName: wallet.name,
-            walletDescription: wallet.description,
-            address: wallet.address,
-            chainId: wallet.chainId,
-            balances: formattedBalances,
-            totalUsdValue,
-            error: null,
-          };
-        } catch (error) {
-          return {
-            walletId: wallet.id,
-            walletName: wallet.name,
-            walletDescription: wallet.description,
-            address: wallet.address,
-            chainId: wallet.chainId,
-            balances: [],
-            totalUsdValue: 0,
-            error: error instanceof Error ? error.message : 'Unknown error fetching wallet balances',
-          };
-        }
-      })
-    );
+    for (const wallet of wallets) {
+      try {
+        await this.delay(300);
+        const balances = await this.getSafeBalances(wallet.address, wallet.chainId);
+        const formattedBalances = this.formatBalancesForDisplay(balances, wallet.chainId, prices);
+        const totalUsdValue = formattedBalances.reduce((sum, token) => sum + token.usdValue, 0);
 
-    // Map all results to wallet objects, handling both fulfilled and rejected promises
-    return results.map((result, index) => {
-      if (result.status === 'fulfilled') {
-        return result.value;
+        results.push({
+          walletId: wallet.id,
+          walletName: wallet.name,
+          walletDescription: wallet.description,
+          address: wallet.address,
+          chainId: wallet.chainId,
+          balances: formattedBalances,
+          totalUsdValue,
+          error: null,
+        });
+      } catch (error) {
+        results.push({
+          walletId: wallet.id,
+          walletName: wallet.name,
+          walletDescription: wallet.description,
+          address: wallet.address,
+          chainId: wallet.chainId,
+          balances: [],
+          totalUsdValue: 0,
+          error: error instanceof Error ? error.message : 'Unknown error fetching wallet balances',
+        });
       }
-      
-      // If promise rejected despite try-catch (shouldn't happen, but handle gracefully)
-      const wallet = wallets[index];
-      return {
-        walletId: wallet.id,
-        walletName: wallet.name,
-        walletDescription: wallet.description,
-        address: wallet.address,
-        chainId: wallet.chainId,
-        balances: [],
-        totalUsdValue: 0,
-        error: result.reason instanceof Error ? result.reason.message : 'Unexpected error fetching wallet',
-      };
-    });
+    }
+
+    return results;
   }
 }
 
