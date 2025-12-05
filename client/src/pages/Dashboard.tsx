@@ -85,7 +85,7 @@ export default function Dashboard() {
       )}
 
       <Tabs defaultValue="nft-collections" className="space-y-6">
-        <TabsList className="sticky top-0 z-50 bg-background py-2 grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 text-left mt-[15px] mb-[15px]">
+        <TabsList className="sticky top-0 z-50 bg-background py-2 grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 text-left mt-[0px] mb-[0px]">
           <TabsTrigger value="nft-collections" data-testid="tab-trigger-nft-collections">
             NFT Collections
           </TabsTrigger>
