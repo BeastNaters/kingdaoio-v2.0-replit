@@ -393,46 +393,146 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('Generating new treasury snapshot...');
 
-      const [tokenPrices, safeBalances, duneBalances] = await Promise.all([
-        fetchTokenPrices(),
-        fetchSafeBalances(),
-        fetchWalletBalances(),
+      const [tokenPrices, safeBalances, duneBalances, sheetData] = await Promise.all([
+        fetchTokenPrices().catch(err => {
+          console.warn('Failed to fetch token prices:', err);
+          return [];
+        }),
+        fetchSafeBalances().catch(err => {
+          console.warn('Failed to fetch Safe balances:', err);
+          return [];
+        }),
+        fetchWalletBalances().catch(err => {
+          console.warn('Failed to fetch wallet balances:', err);
+          return [];
+        }),
+        fetchAllTreasuryData().catch(err => {
+          console.warn('Failed to fetch sheet data:', err);
+          return null;
+        }),
       ]);
 
-      const priceMap = new Map(tokenPrices.map(p => [p.symbol, p.price]));
+      const priceMap = new Map(tokenPrices.map((p: { symbol: string; price: number }) => [p.symbol, p.price]));
       
-      const allTokens = [...safeBalances];
-      duneBalances.forEach(wallet => {
-        wallet.tokens.forEach(token => {
-          const existing = allTokens.find(t => t.symbol === token.symbol);
-          if (existing) {
-            existing.amount += token.amount;
-          } else {
-            allTokens.push({
-              symbol: token.symbol,
-              amount: token.amount,
-              usdPrice: priceMap.get(token.symbol),
-              usdValue: (priceMap.get(token.symbol) || 0) * token.amount,
-              source: 'dune' as const,
-            });
+      const tokenMap = new Map<string, any>();
+
+      safeBalances.forEach((token: any) => {
+        tokenMap.set(token.symbol, { ...token, source: 'safe' });
+      });
+
+      duneBalances.forEach((wallet: any) => {
+        wallet.tokens.forEach((token: any) => {
+          if (!tokenMap.has(token.symbol) || tokenMap.get(token.symbol).source !== 'safe') {
+            const existing = tokenMap.get(token.symbol);
+            if (existing) {
+              existing.amount += token.amount;
+            } else {
+              tokenMap.set(token.symbol, {
+                symbol: token.symbol,
+                amount: token.amount,
+                usdPrice: priceMap.get(token.symbol),
+                usdValue: (priceMap.get(token.symbol) || 0) * token.amount,
+                source: 'dune' as const,
+              });
+            }
           }
         });
       });
 
-      allTokens.forEach(token => {
+      if (sheetData) {
+        sheetData.dcaPortfolio.forEach((token: any) => {
+          const existing = tokenMap.get(token.token);
+          if (existing) {
+            existing.amount += token.amount;
+            existing.usdValue = (existing.usdValue || 0) + token.usdValue;
+          } else {
+            tokenMap.set(token.token, {
+              symbol: token.token,
+              amount: token.amount,
+              usdPrice: token.priceUsd,
+              usdValue: token.usdValue,
+              source: 'sheets' as const,
+            });
+          }
+        });
+
+        sheetData.otherTokens.forEach((token: any) => {
+          const existing = tokenMap.get(token.token);
+          if (existing) {
+            existing.amount += token.amount;
+            existing.usdValue = (existing.usdValue || 0) + token.usdValue;
+          } else {
+            tokenMap.set(token.token, {
+              symbol: token.token,
+              amount: token.amount,
+              usdPrice: token.priceUsd,
+              usdValue: token.usdValue,
+              source: 'sheets' as const,
+            });
+          }
+        });
+      }
+
+      const allTokens = Array.from(tokenMap.values());
+
+      allTokens.forEach((token: any) => {
         if (token.usdPrice && !token.usdValue) {
           token.usdValue = token.usdPrice * token.amount;
         }
       });
 
-      const totalUsdValue = allTokens.reduce((sum, token) => sum + (token.usdValue || 0), 0);
+      const sheetsTotalValue = sheetData?.totals?.grandTotal || 0;
+      const tokensTotalValue = allTokens.reduce((sum: number, token: any) => sum + (token.usdValue || 0), 0);
+      const totalUsdValue = Math.max(tokensTotalValue, sheetsTotalValue);
+
+      const walletsList: { address: string; label?: string; chainId?: number }[] = [];
+      
+      duneBalances.forEach((w: any) => {
+        walletsList.push({ address: w.address, chainId: 1 });
+      });
+
+      if (sheetData) {
+        sheetData.daoWallets.forEach((w: any) => {
+          walletsList.push({ 
+            address: w.address, 
+            label: w.walletLabel, 
+            chainId: w.chain === 'SOL' ? 101 : 1 
+          });
+        });
+        sheetData.tacticalWallets.forEach((w: any) => {
+          walletsList.push({ 
+            address: w.address, 
+            label: w.walletLabel, 
+            chainId: w.chain === 'SOL' ? 101 : 1 
+          });
+        });
+        sheetData.multiSigWallets.forEach((w: any) => {
+          walletsList.push({ 
+            address: w.address, 
+            label: w.walletLabel, 
+            chainId: 1 
+          });
+        });
+      }
+
+      const nftsList: any[] = [];
+      if (sheetData?.nftCollections) {
+        sheetData.nftCollections.forEach((nft: any) => {
+          nftsList.push({
+            collection: nft.collection,
+            tokenId: nft.tokenId || '',
+            estimatedValueUsd: nft.estimatedValueUsd,
+            contractAddress: nft.contractAddress,
+          });
+        });
+      }
 
       const snapshot = {
         timestamp: new Date().toISOString(),
         totalUsdValue,
         tokens: allTokens,
-        nfts: [],
-        wallets: duneBalances.map(w => ({ address: w.address, chainId: 1 })),
+        nfts: nftsList,
+        wallets: walletsList,
       };
 
       try {
