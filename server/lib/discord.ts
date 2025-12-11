@@ -10,51 +10,48 @@ interface CachedAnnouncements {
 const announcementsCache: Map<string, CachedAnnouncements> = new Map();
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
-async function getAccessToken() {
-  if (connectionSettings && connectionSettings.settings.expires_at && new Date(connectionSettings.settings.expires_at).getTime() > Date.now()) {
-    return connectionSettings.settings.access_token;
+async function getBotToken() {
+  if (process.env.DISCORD_BOT_TOKEN) {
+    return process.env.DISCORD_BOT_TOKEN;
   }
   
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME
+  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY 
     ? 'repl ' + process.env.REPL_IDENTITY 
     : process.env.WEB_REPL_RENEWAL 
     ? 'depl ' + process.env.WEB_REPL_RENEWAL 
     : null;
 
-  if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
-  }
+  if (xReplitToken && hostname) {
+    try {
+      const response = await fetch(
+        'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=discord',
+        {
+          headers: {
+            'Accept': 'application/json',
+            'X_REPLIT_TOKEN': xReplitToken
+          }
+        }
+      );
+      
+      const data = await response.json();
+      connectionSettings = data.items?.[0];
 
-  const response = await fetch(
-    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=discord',
-    {
-      headers: {
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken
+      if (connectionSettings?.settings) {
+        const token = connectionSettings.settings?.bot_token || 
+                      connectionSettings.settings?.access_token;
+        if (token) return token;
       }
+    } catch (err) {
+      console.log('Replit connector not available, checking for DISCORD_BOT_TOKEN secret');
     }
-  );
-  
-  const data = await response.json();
-  connectionSettings = data.items?.[0];
-
-  if (!connectionSettings || !connectionSettings.settings) {
-    throw new Error('Discord connector not configured. Please set up the Discord bot connection in Replit.');
   }
 
-  const accessToken = connectionSettings.settings?.access_token || 
-                      connectionSettings.settings?.oauth?.credentials?.access_token ||
-                      connectionSettings.settings?.bot_token;
-
-  if (!accessToken) {
-    throw new Error('Discord bot token not found. Please reconnect the Discord integration.');
-  }
-  return accessToken;
+  throw new Error('DISCORD_BOT_TOKEN secret not configured. Please add your Discord bot token to Replit Secrets.');
 }
 
 async function getUncachableDiscordClient() {
-  const token = await getAccessToken();
+  const token = await getBotToken();
 
   const client = new Client({
     intents: [
