@@ -14,22 +14,6 @@ run = ["npm", "run", "start"]
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 36457
-externalPort = 3001
-
-[[ports]]
-localPort = 38505
-externalPort = 3003
-
-[[ports]]
-localPort = 38895
-externalPort = 3000
-
-[[ports]]
-localPort = 44961
-externalPort = 3002
-
 [env]
 PORT = "5000"
 
@@ -57,3 +41,9 @@ waitForPort = 5000
 [agent]
 integrations = ["google-sheet:1.0.0", "discord:1.0.0"]
 expertMode = true
+
+[userenv]
+
+[userenv.shared]
+DISCORD_GUILD_ID = "906638337387950171"
+DISCORD_CHANNEL_ID = "906666345138110526"

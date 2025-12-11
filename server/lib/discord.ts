@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits } from 'discord.js';
+import { Client, GatewayIntentBits, Message, Collection } from 'discord.js';
 
 let connectionSettings: any;
 
@@ -131,7 +131,10 @@ export async function fetchDiscordAnnouncements(
     
     const messages = await channel.messages.fetch(fetchOptions);
     
-    const announcements = Array.from(messages.values())
+    const messageArray: Message[] = [];
+    messages.forEach((msg) => messageArray.push(msg));
+    
+    const announcements = messageArray
       .map(msg => ({
         id: msg.id,
         title: (msg.content || 'No content').split('\n')[0].slice(0, 100),

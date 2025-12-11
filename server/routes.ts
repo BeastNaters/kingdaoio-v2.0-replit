@@ -400,8 +400,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/discord/announcements", async (req, res) => {
     try {
-      const discordSettings = await storage.getAdminSetting('discord_config');
-      const settings = discordSettings?.value as any;
+      let adminSettings: any = null;
+      try {
+        const discordSettings = await storage.getAdminSetting('discord_config');
+        adminSettings = discordSettings?.value;
+      } catch (dbError) {
+        console.log('Admin settings not available, using environment variables');
+      }
+      
+      const settings = {
+        enabled: adminSettings?.enabled ?? true,
+        guildId: adminSettings?.guildId || process.env.DISCORD_GUILD_ID,
+        channelId: adminSettings?.channelId || process.env.DISCORD_CHANNEL_ID,
+      };
       
       const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
       const before = req.query.before as string | undefined;
