@@ -26,7 +26,7 @@ async function getAccessToken() {
     throw new Error('X_REPLIT_TOKEN not found for repl/depl');
   }
 
-  connectionSettings = await fetch(
+  const response = await fetch(
     'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=discord',
     {
       headers: {
@@ -34,12 +34,21 @@ async function getAccessToken() {
         'X_REPLIT_TOKEN': xReplitToken
       }
     }
-  ).then(res => res.json()).then(data => data.items?.[0]);
+  );
+  
+  const data = await response.json();
+  connectionSettings = data.items?.[0];
 
-  const accessToken = connectionSettings?.settings?.access_token || connectionSettings.settings?.oauth?.credentials?.access_token;
+  if (!connectionSettings || !connectionSettings.settings) {
+    throw new Error('Discord connector not configured. Please set up the Discord bot connection in Replit.');
+  }
 
-  if (!connectionSettings || !accessToken) {
-    throw new Error('Discord not connected');
+  const accessToken = connectionSettings.settings?.access_token || 
+                      connectionSettings.settings?.oauth?.credentials?.access_token ||
+                      connectionSettings.settings?.bot_token;
+
+  if (!accessToken) {
+    throw new Error('Discord bot token not found. Please reconnect the Discord integration.');
   }
   return accessToken;
 }
