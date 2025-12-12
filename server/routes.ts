@@ -1194,6 +1194,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin Data Export Endpoints
+  app.get("/api/admin/export/messages", requireAdmin, async (req, res) => {
+    try {
+      const format = (req.query.format as string) || 'json';
+      const channel = req.query.channel as string;
+      
+      const allMessages = [];
+      const channels = channel ? [channel] : ['general', 'treasury', 'governance'];
+      
+      for (const ch of channels) {
+        const messages = await storage.getCommunityMessages(ch, 1000, 0);
+        allMessages.push(...messages);
+      }
+      
+      allMessages.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      if (format === 'csv') {
+        const headers = ['id', 'wallet_address', 'username', 'message', 'channel', 'created_at'];
+        const csvRows = [headers.join(',')];
+        
+        for (const msg of allMessages) {
+          const row = [
+            msg.id,
+            msg.walletAddress,
+            msg.username || '',
+            `"${(msg.message || '').replace(/"/g, '""')}"`,
+            msg.channel,
+            msg.createdAt,
+          ];
+          csvRows.push(row.join(','));
+        }
+        
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename=community_messages.csv');
+        return res.send(csvRows.join('\n'));
+      }
+      
+      return res.json({
+        success: true,
+        count: allMessages.length,
+        data: allMessages,
+      });
+    } catch (error: any) {
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to export messages')
+      );
+    }
+  });
+
+  app.get("/api/admin/export/members", requireAdmin, async (req, res) => {
+    try {
+      const format = (req.query.format as string) || 'json';
+      
+      const members = await storage.getAllCommunityMembers();
+      
+      if (format === 'csv') {
+        const headers = ['id', 'wallet_address', 'display_name', 'discord_handle', 'email', 'country', 'created_at'];
+        const csvRows = [headers.join(',')];
+        
+        for (const member of members) {
+          const row = [
+            member.id,
+            member.walletAddress,
+            `"${(member.displayName || '').replace(/"/g, '""')}"`,
+            `"${(member.discordHandle || '').replace(/"/g, '""')}"`,
+            member.email || '',
+            member.country || '',
+            member.createdAt,
+          ];
+          csvRows.push(row.join(','));
+        }
+        
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename=community_members.csv');
+        return res.send(csvRows.join('\n'));
+      }
+      
+      return res.json({
+        success: true,
+        count: members.length,
+        data: members,
+      });
+    } catch (error: any) {
+      return res.status(500).json(
+        createErrorResponse(error, 'Failed to export members')
+      );
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

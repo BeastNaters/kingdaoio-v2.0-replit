@@ -34,6 +34,7 @@ export interface IStorage {
   createCommunityMessage(message: InsertCommunityMessage): Promise<CommunityMessage>;
 
   getCommunityMember(walletAddress: string): Promise<CommunityMember | undefined>;
+  getAllCommunityMembers(): Promise<CommunityMember[]>;
   createOrUpdateCommunityMember(member: InsertCommunityMember): Promise<CommunityMember>;
 
   getSafeAccount(safeAddress: string): Promise<SafeAccount | undefined>;
@@ -159,6 +160,10 @@ export class DatabaseStorage implements IStorage {
       .from(communityMembers)
       .where(eq(communityMembers.walletAddress, walletAddress));
     return member || undefined;
+  }
+
+  async getAllCommunityMembers(): Promise<CommunityMember[]> {
+    return await db.select().from(communityMembers).orderBy(desc(communityMembers.createdAt));
   }
 
   async createOrUpdateCommunityMember(insertMember: InsertCommunityMember): Promise<CommunityMember> {
