@@ -26,6 +26,13 @@ export function ChatTab() {
 
   const { data: messagesData, isLoading: isLoadingMessages } = useQuery<{success: boolean, data: CommunityMessage[]}>({
     queryKey: ['/api/community/messages', activeChannel],
+    queryFn: async () => {
+      const res = await fetch(`/api/community/messages?channel=${activeChannel}`, {
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed to fetch messages');
+      return res.json();
+    },
     enabled: isConnected,
     staleTime: 30000,
     refetchInterval: 60000,
@@ -54,14 +61,11 @@ export function ChatTab() {
 
   const postMessageMutation = useMutation({
     mutationFn: async (message: string) => {
-      return apiRequest('/api/community/messages', {
-        method: 'POST',
-        body: JSON.stringify({
-          walletAddress: address,
-          message,
-          channel: activeChannel,
-          username: address ? `${address.slice(0, 6)}...${address.slice(-4)}` : undefined,
-        }),
+      return apiRequest('POST', '/api/community/messages', {
+        walletAddress: address,
+        message,
+        channel: activeChannel,
+        username: address ? `${address.slice(0, 6)}...${address.slice(-4)}` : undefined,
       });
     },
     onSuccess: () => {
