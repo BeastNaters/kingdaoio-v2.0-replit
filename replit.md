@@ -37,3 +37,13 @@ The dashboard features a tabbed interface for NFT Collections, Crypto, Multi-Sig
 - **Replit Connectors:** Manages OAuth and authentication for integrations like Google Sheets and Discord.
 - **Solana RPC:** For Solana wallet balance tracking.
 - **Web3 APIs (e.g., CoinGecko, Moralis, Alchemy):** For real-time token prices, wallet balances, and NFT metadata.
+
+## Priority List
+
+1. *(Open for next task)*
+2. **Transition to Supabase** - Migrate database from current PostgreSQL/Neon to Supabase for enhanced features (dashboard, real-time subscriptions, row-level security)
+
+## Admin Configuration
+
+- **Admin Wallet:** `0xd8a7113A701A4ECcC5F8Aa85a621Ac42104D6Eb8`
+- **Export Endpoints:** `/api/admin/export/messages` and `/api/admin/export/members` (supports `?format=csv`)
