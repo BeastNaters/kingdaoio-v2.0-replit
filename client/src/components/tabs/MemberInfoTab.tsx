@@ -63,12 +63,9 @@ export function MemberInfoTab() {
 
   const saveMemberMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      return apiRequest('/api/community/members', {
-        method: 'POST',
-        body: JSON.stringify({
-          ...data,
-          walletAddress: address,
-        }),
+      return apiRequest('POST', '/api/community/members', {
+        ...data,
+        walletAddress: address,
       });
     },
     onSuccess: () => {

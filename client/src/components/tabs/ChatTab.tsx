@@ -52,7 +52,9 @@ export function ChatTab() {
       }
     });
 
-    return () => socket.disconnect();
+    return () => {
+      socket.disconnect();
+    };
   }, [activeChannel]);
 
   useEffect(() => {
